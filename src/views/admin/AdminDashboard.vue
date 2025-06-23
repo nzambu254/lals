@@ -65,17 +65,21 @@
     <div class="dashboard-section">
       <h2 class="section-title">Quick Actions</h2>
       <div class="quick-actions">
-        <button class="action-btn" @click="navigateTo('users')">
+        <button class="action-btn" @click="navigateTo('/admin/users')">
           <span class="action-icon">👥</span>
           <span>Manage Users</span>
         </button>
-        <button class="action-btn" @click="navigateTo('content')">
+        <button class="action-btn" @click="navigateTo('/admin/content')">
           <span class="action-icon">📄</span>
           <span>Create Content</span>
         </button>
-        <button class="action-btn" @click="navigateTo('training')">
+        <button class="action-btn" @click="navigateTo('/admin/training')">
           <span class="action-icon">🎓</span>
           <span>Add Program</span>
+        </button>
+        <button class="action-btn" @click="navigateTo('/admin/assignments')">
+          <span class="action-icon">📋</span>
+          <span>Assignments</span>
         </button>
       </div>
     </div>
@@ -106,50 +110,64 @@ const getActivityIcon = (type) => {
 };
 
 const navigateTo = (route) => {
-  router.push(`/admin/${route}`);
+  router.push(route);
 };
 </script>
 
 <style scoped>
 .admin-container {
-  padding: 20px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
 }
 
 .page-title {
-  font-size: 24px;
-  margin-bottom: 20px;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 30px;
   color: #2d3748;
+  text-align: center;
 }
 
 /* Summary Cards */
 .dashboard-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
+  width: 100%;
 }
 
 .summary-card {
   background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
   display: flex;
   align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #e2e8f0;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
 
 .summary-icon {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 15px;
+  margin-right: 20px;
+  flex-shrink: 0;
 }
 
 .summary-icon .icon {
-  font-size: 24px;
+  font-size: 28px;
 }
 
 .users-icon {
@@ -173,61 +191,76 @@ const navigateTo = (route) => {
 }
 
 .summary-content h3 {
-  margin: 0 0 5px 0;
+  margin: 0 0 8px 0;
   font-size: 14px;
+  font-weight: 500;
   color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .summary-content p {
   margin: 0;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 700;
   color: #2d3748;
 }
 
 /* Dashboard Sections */
 .dashboard-section {
   background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  margin-bottom: 30px;
+  border: 1px solid #e2e8f0;
+  width: 100%;
 }
 
 .section-title {
-  font-size: 18px;
-  margin: 0 0 15px 0;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 20px 0;
   color: #2d3748;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 /* Activity List */
 .activity-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
 }
 
 .activity-item {
   display: flex;
   align-items: center;
-  padding: 10px 0;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f7fafc;
+  transition: background-color 0.2s;
+}
+
+.activity-item:hover {
+  background-color: #edf2f7;
 }
 
 .activity-icon {
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
-  background-color: #f7fafc;
+  background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 15px;
+  margin-right: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .activity-icon .icon {
-  font-size: 18px;
+  font-size: 20px;
   color: #4a5568;
 }
 
@@ -236,50 +269,106 @@ const navigateTo = (route) => {
 }
 
 .activity-message {
-  margin: 0 0 3px 0;
-  font-size: 14px;
+  margin: 0 0 5px 0;
+  font-size: 15px;
+  font-weight: 500;
   color: #2d3748;
 }
 
 .activity-time {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: #718096;
 }
 
 /* Quick Actions */
 .quick-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
 }
 
 .action-btn {
   background: #f7fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
+  min-height: 120px;
 }
 
 .action-btn:hover {
   background: #ebf8ff;
-  border-color: #bee3f8;
+  border-color: #3182ce;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.15);
 }
 
 .action-btn span:last-child {
-  margin-top: 8px;
-  font-size: 13px;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 600;
   color: #4a5568;
 }
 
 .action-icon {
-  font-size: 20px;
+  font-size: 24px;
   color: #3182ce;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-summary {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .summary-card {
+    padding: 20px;
+  }
+  
+  .dashboard-section {
+    padding: 20px;
+  }
+  
+  .page-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .quick-actions {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+  }
+  
+  .action-btn {
+    min-height: 100px;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+  
+  .summary-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .summary-icon {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
 }
 </style>

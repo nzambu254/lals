@@ -1,10 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
-// Layouts
-import AdminLayout from '@/layouts/AdminLayout.vue'
-import StudentLayout from '@/layouts/StudentLayout.vue'
-
 // Admin Components
 import AdminDashboard from '@/views/admin/AdminDashboard.vue'
 import UserManagement from '@/views/admin/UserManagement.vue'
@@ -42,82 +38,81 @@ const routes = [
   // Admin Routes
   {
     path: '/admin',
-    component: AdminLayout,
-    meta: { requiresAuth: true, role: 'admin' },
-    children: [
-      { 
-        path: '', 
-        redirect: 'dashboard' 
-      },
-      { 
-        path: 'dashboard', 
-        name: 'AdminDashboard', 
-        component: AdminDashboard 
-      },
-      { 
-        path: 'users', 
-        name: 'UserManagement', 
-        component: UserManagement 
-      },
-      { 
-        path: 'content', 
-        name: 'ContentCreation', 
-        component: ContentCreation 
-      },
-      { 
-        path: 'training', 
-        name: 'ProgramTraining', 
-        component: ProgramTraining 
-      },
-      { 
-        path: 'simulations', 
-        name: 'SimulationModules', 
-        component: SimulationModules 
-      },
-      { 
-        path: 'analytics', 
-        name: 'SystemAnalytics', 
-        component: SystemAnalytics 
-      }
-    ]
+    redirect: '/admin/dashboard',
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/admin/dashboard',
+    name: 'AdminDashboard',
+    component: AdminDashboard,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/admin/users',
+    name: 'UserManagement',
+    component: UserManagement,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/admin/content',
+    name: 'ContentCreation',
+    component: ContentCreation,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/admin/training',
+    name: 'ProgramTraining',
+    component: ProgramTraining,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/admin/simulations',
+    name: 'SimulationModules',
+    component: SimulationModules,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/admin/analytics',
+    name: 'SystemAnalytics',
+    component: SystemAnalytics,
+    meta: { requiresAuth: true, role: 'admin' }
   },
 
   // Student Routes
   {
     path: '/student',
-    component: StudentLayout,
-    meta: { requiresAuth: true, role: 'student' },
-    children: [
-      { 
-        path: '', 
-        redirect: 'dashboard' 
-      },
-      { 
-        path: 'dashboard', 
-        name: 'StudentDashboard', 
-        component: StudentDashboard 
-      },
-      { 
-        path: 'simulations', 
-        name: 'SimulationTasks', 
-        component: SimulationTasks 
-      },
-      { 
-        path: 'forum', 
-        name: 'CollaborationForum', 
-        component: CollaborationForum 
-      },
-      { 
-        path: 'feedback', 
-        name: 'FeedbackMessages', 
-        component: FeedbackMessages 
-      },
-      { 
-        path: 'settings', 
-        name: 'StudentSettings', 
-        component: StudentSettings 
-      }
-    ]
+    redirect: '/student/dashboard',
+    meta: { requiresAuth: true, role: 'student' }
+  },
+  {
+    path: '/student/dashboard',
+    name: 'StudentDashboard',
+    component: StudentDashboard,
+    meta: { requiresAuth: true, role: 'student' }
+  },
+  {
+    path: '/student/simulations',
+    name: 'SimulationTasks',
+    component: SimulationTasks,
+    meta: { requiresAuth: true, role: 'student' }
+  },
+  {
+    path: '/student/forum',
+    name: 'CollaborationForum',
+    component: CollaborationForum,
+    meta: { requiresAuth: true, role: 'student' }
+  },
+  {
+    path: '/student/feedback',
+    name: 'FeedbackMessages',
+    component: FeedbackMessages,
+    meta: { requiresAuth: true, role: 'student' }
+  },
+  {
+    path: '/student/settings',
+    name: 'StudentSettings',
+    component: StudentSettings,
+    meta: { requiresAuth: true, role: 'student' }
   },
 
   // Catch-all route

@@ -5,7 +5,12 @@
       <div class="spinner"></div>
     </div>
 
-    <!-- Authenticated layout only -->
+    <!-- Guest pages (Landing and Login) without layout -->
+    <div v-else-if="isGuestPage" class="guest-layout">
+      <router-view />
+    </div>
+
+    <!-- Authenticated layout with navigation and sidebar -->
     <div v-else class="app-layout">
       <!-- Top Navigation Bar -->
       <nav class="top-nav">
@@ -32,11 +37,19 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import Sidebar from '@/components/Sidebar.vue';
 
 const auth = useAuthStore();
+const route = useRoute();
+
+// Check if current route is a guest page (landing or login)
+const isGuestPage = computed(() => {
+  const guestRoutes = ['/', '/login', 'Home', 'Login'];
+  return guestRoutes.includes(route.path) || guestRoutes.includes(route.name);
+});
 
 onMounted(async () => {
   await auth.init();
@@ -44,7 +57,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Layout styles */
+/* Guest layout (full screen for landing/login) */
+.guest-layout {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Authenticated layout styles */
 .app-layout {
   display: flex;
   flex-direction: column;
