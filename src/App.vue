@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <!-- Loading state -->
-    <div v-if="loading" class="loading-spinner">
+    <div v-if="auth.loading" class="loading-spinner">
       <div class="spinner"></div>
     </div>
 
@@ -14,15 +14,15 @@
             <h1>GeoLearn System</h1>
           </div>
           <div class="nav-right">
-            <span class="user-email">{{ currentUserEmail }}</span>
-            <button @click="handleLogout" class="logout-btn">Logout</button>
+            <span class="user-email">{{ auth.currentUserEmail }}</span>
+            <button @click="auth.logout" class="logout-btn">Logout</button>
           </div>
         </div>
       </nav>
 
       <!-- Main Content with Fixed Sidebar -->
       <div class="main-container">
-        <Sidebar :isAdmin="isAdmin" />
+        <Sidebar :isAdmin="auth.isAdmin" />
         <div class="content-wrapper">
           <router-view />
         </div>
@@ -32,37 +32,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { auth } from '@/firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onMounted } from 'vue';
+import { useAuthStore } from '@/stores/auth';
 import Sidebar from '@/components/Sidebar.vue';
 
-const router = useRouter();
-const loading = ref(true);
-const currentUser = ref(null);
+const auth = useAuthStore();
 
-// Check authentication state
-const isAuthenticated = computed(() => currentUser.value !== null);
-const currentUserEmail = computed(() => currentUser.value?.email || '');
-const isAdmin = computed(() => currentUserEmail.value === 'alvn4407@gmail.com');
-
-onMounted(() => {
-  onAuthStateChanged(auth, (user) => {
-    currentUser.value = user;
-    loading.value = false;
-  });
+onMounted(async () => {
+  await auth.init();
 });
-
-// Logout function
-const handleLogout = async () => {
-  try {
-    await signOut(auth);
-    router.push('/login');
-  } catch (error) {
-    console.error('Logout error:', error);
-  }
-};
 </script>
 
 <style scoped>

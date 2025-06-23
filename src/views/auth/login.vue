@@ -22,11 +22,11 @@
       </div>
 
       <!-- Error Message -->
-      <div v-if="errorMessage" class="alert alert-error">
+      <div v-if="auth.error" class="alert alert-error">
         <svg class="alert-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
         </svg>
-        {{ errorMessage }}
+        {{ auth.error }}
       </div>
 
       <!-- Success Message -->
@@ -62,9 +62,9 @@
         </div>
 
         <div class="form-actions">
-          <button type="submit" :disabled="loading" class="btn-primary">
-            <span v-if="loading" class="loading-spinner"></span>
-            {{ loading ? 'Signing in...' : 'Sign In' }}
+          <button type="submit" :disabled="auth.loading" class="btn-primary">
+            <span v-if="auth.loading" class="loading-spinner"></span>
+            {{ auth.loading ? 'Signing in...' : 'Sign In' }}
           </button>
 
           <div class="forgot-password">
@@ -77,75 +77,59 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { auth } from '@/firebase'
-import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
+import { ref } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import { useRouter } from 'vue-router';
 
-const router = useRouter()
+const auth = useAuthStore();
+const router = useRouter();
 
 const formData = ref({
   email: '',
   password: ''
-})
+});
 
-const showPassword = ref(false)
-const loading = ref(false)
-const errorMessage = ref('')
-const resetEmailSent = ref(false)
+const showPassword = ref(false);
+const resetEmailSent = ref(false);
 
 const handleLogin = async () => {
-  errorMessage.value = ''
-  loading.value = true
-
+  resetEmailSent.value = false;
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, formData.value.email, formData.value.password)
-    const user = userCredential.user
-
-    // Save token
-    const token = await user.getIdToken()
-    localStorage.setItem('authToken', token)
-
-    // Normalize email and determine role
-    const email = formData.value.email.trim().toLowerCase()
-    const role = email === 'alvn4407@gmail.com' ? 'admin' : 'student'
-    localStorage.setItem('userRole', role)
-
-    // Redirect based on role
-    if (role === 'admin') {
-      router.push('/admin/dashboard')
-    } else {
-      router.push('/student/dashboard')
+    const success = await auth.login(formData.value.email, formData.value.password);
+    
+    // Special case for admin password reset
+    if (!success && formData.value.email === 'alvn4407@gmail.com') {
+      auth.error = 'Please contact the administrator for password reset.';
+      return;
     }
+
+    // Redirect is now handled in the auth store
   } catch (error) {
-    errorMessage.value = error.message
-  } finally {
-    loading.value = false
+    // Error handling is now centralized in the store
+    console.error('Login error:', error);
   }
-}
-
-
+};
 
 const resetPassword = async () => {
   if (!formData.value.email) {
-    errorMessage.value = 'Please enter your email address first.'
-    return
+    auth.error = 'Please enter your email address first.';
+    return;
   }
 
+  // Special handling for admin account
   if (formData.value.email === 'alvn4407@gmail.com') {
-    errorMessage.value = 'Please contact the administrator for password reset.'
-    return
+    auth.error = 'Please contact the administrator for password reset.';
+    return;
   }
 
   try {
-    await sendPasswordResetEmail(auth, formData.value.email)
-    resetEmailSent.value = true
-    errorMessage.value = ''
+    resetEmailSent.value = await auth.resetPassword(formData.value.email);
   } catch (error) {
-    errorMessage.value = error.message
+    console.error('Password reset error:', error);
   }
-}
+};
 </script>
+
 
 <style scoped>
 * {
