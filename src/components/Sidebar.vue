@@ -15,6 +15,13 @@
         <!-- Admin Links -->
         <template v-if="isAdmin">
           <div class="nav-section">
+            <router-link to="/admin/dashboard" class="nav-link">
+              <span class="nav-icon">📊</span>
+              <span>Admin Dashboard</span>
+            </router-link>
+          </div>
+
+          <div class="nav-section">
             <h3 class="nav-section-title">Management</h3>
             <router-link to="/users" class="nav-link">
               <span class="nav-icon">👥</span>

@@ -5,8 +5,8 @@
       <div class="spinner"></div>
     </div>
 
-    <!-- Authenticated layout -->
-    <div v-else-if="isAuthenticated" class="app-layout">
+    <!-- Authenticated layout only -->
+    <div v-else class="app-layout">
       <!-- Top Navigation Bar -->
       <nav class="top-nav">
         <div class="nav-content">
@@ -28,9 +28,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Unauthenticated layout -->
-    <router-view v-else />
   </div>
 </template>
 
