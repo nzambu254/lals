@@ -1,5 +1,9 @@
- import { createRouter, createWebHistory } from 'vue-router'
-import Sidebar from '@/components/Sidebar.vue'
+import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+// Layouts
+import AdminLayout from '@/layouts/AdminLayout.vue'
+import StudentLayout from '@/layouts/StudentLayout.vue'
 
 // Admin Components
 import AdminDashboard from '@/views/admin/AdminDashboard.vue'
@@ -26,50 +30,94 @@ const routes = [
     path: '/',
     name: 'Home',
     component: Landing,
-    meta: { hideSidebar: true, requiresGuest: true }
+    meta: { requiresGuest: true }
   },
   {
     path: '/login',
     name: 'Login',
     component: Login,
-    meta: { hideSidebar: true, requiresGuest: true }
+    meta: { requiresGuest: true }
   },
 
-  // Admin
+  // Admin Routes
   {
     path: '/admin',
-    component: Sidebar,
+    component: AdminLayout,
     meta: { requiresAuth: true, role: 'admin' },
     children: [
-      { path: '', redirect: 'dashboard' },
-      { path: 'dashboard', name: 'AdminDashboard', component: AdminDashboard },
-      { path: 'users', name: 'UserManagement', component: UserManagement },
-      { path: 'content', name: 'ContentCreation', component: ContentCreation },
-      { path: 'training', name: 'ProgramTraining', component: ProgramTraining },
-      { path: 'simulations', name: 'SimulationModules', component: SimulationModules },
-      { path: 'analytics', name: 'SystemAnalytics', component: SystemAnalytics }
+      { 
+        path: '', 
+        redirect: 'dashboard' 
+      },
+      { 
+        path: 'dashboard', 
+        name: 'AdminDashboard', 
+        component: AdminDashboard 
+      },
+      { 
+        path: 'users', 
+        name: 'UserManagement', 
+        component: UserManagement 
+      },
+      { 
+        path: 'content', 
+        name: 'ContentCreation', 
+        component: ContentCreation 
+      },
+      { 
+        path: 'training', 
+        name: 'ProgramTraining', 
+        component: ProgramTraining 
+      },
+      { 
+        path: 'simulations', 
+        name: 'SimulationModules', 
+        component: SimulationModules 
+      },
+      { 
+        path: 'analytics', 
+        name: 'SystemAnalytics', 
+        component: SystemAnalytics 
+      }
     ]
   },
 
-  // Student
+  // Student Routes
   {
     path: '/student',
-    component: Sidebar,
+    component: StudentLayout,
     meta: { requiresAuth: true, role: 'student' },
     children: [
-      { path: '', redirect: 'dashboard' },
-      { path: 'dashboard', name: 'StudentDashboard', component: StudentDashboard },
-      { path: 'simulations', name: 'SimulationTasks', component: SimulationTasks },
-      { path: 'forum', name: 'CollaborationForum', component: CollaborationForum },
-      { path: 'feedback', name: 'FeedbackMessages', component: FeedbackMessages },
-      { path: 'settings', name: 'StudentSettings', component: StudentSettings }
+      { 
+        path: '', 
+        redirect: 'dashboard' 
+      },
+      { 
+        path: 'dashboard', 
+        name: 'StudentDashboard', 
+        component: StudentDashboard 
+      },
+      { 
+        path: 'simulations', 
+        name: 'SimulationTasks', 
+        component: SimulationTasks 
+      },
+      { 
+        path: 'forum', 
+        name: 'CollaborationForum', 
+        component: CollaborationForum 
+      },
+      { 
+        path: 'feedback', 
+        name: 'FeedbackMessages', 
+        component: FeedbackMessages 
+      },
+      { 
+        path: 'settings', 
+        name: 'StudentSettings', 
+        component: StudentSettings 
+      }
     ]
-  },
-
-  // Default redirect
-  {
-    path: '/',
-    redirect: '/login'
   },
 
   // Catch-all route
@@ -85,15 +133,24 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem('authToken')
-  const userRole = localStorage.getItem('userRole')
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+  
+  // Initialize auth state if not already loaded
+  if (!authStore.initialized) {
+    await authStore.init()
+  }
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
-  } else if (to.meta.requiresAuth && to.meta.role !== userRole) {
-    next(userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard')
-  } else {
+  } 
+  else if (to.meta.requiresAuth && to.meta.role !== (authStore.isAdmin ? 'admin' : 'student')) {
+    next(authStore.isAdmin ? '/admin/dashboard' : '/student/dashboard')
+  } 
+  else if (to.meta.requiresGuest && authStore.isAuthenticated) {
+    next(authStore.isAdmin ? '/admin/dashboard' : '/student/dashboard')
+  }
+  else {
     next()
   }
 })
