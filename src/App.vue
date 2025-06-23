@@ -79,7 +79,7 @@ onMounted(async () => {
 .content-wrapper {
   flex: 1;
   padding: 20px;
-  margin-left: 250px; /* Same as sidebar width */
+  margin-left: 40px; /* Same as sidebar width */
   background-color: #f5f7fa;
 }
 

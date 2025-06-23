@@ -115,16 +115,10 @@ const toggleSidebar = () => {
 </script>
 
 <style scoped>
-/* Container */
-.sidebar-container {
-  display: flex;
-  min-height: 100vh;
-  background-color: #f5f7fa;
-}
 
 /* Sidebar */
 .sidebar {
-  width: 250px;
+  width: 270px;
   background-color: #ffffff;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   transition: width 0.3s ease;
@@ -235,15 +229,15 @@ const toggleSidebar = () => {
   flex: 1;
   padding: 20px;
   transition: margin-left 0.3s ease;
-  margin-left: 250px;
+  margin-left: 50px;
 }
 
 .main-content.expanded {
-  margin-left: 70px;
+  margin-left: 50px;
 }
 
 /* Responsive design */
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .sidebar {
     position: fixed;
     top: 0;
