@@ -23,33 +23,33 @@
 
           <div class="nav-section">
             <h3 class="nav-section-title">Management</h3>
-            <router-link to="/users" class="nav-link">
+            <router-link to="/admin/users" class="nav-link">
               <span class="nav-icon">👥</span>
               <span>User Management</span>
             </router-link>
-            <router-link to="/content" class="nav-link">
+            <router-link to="/admin/content" class="nav-link">
               <span class="nav-icon">📄</span>
               <span>Content Creation</span>
             </router-link>
           </div>
 
           <div class="nav-section">
-            <h3 class="nav-section-title">Training</h3>
-            <router-link to="/training" class="nav-link">
+            <h3 class="nav-section-title">Training & Analytics</h3>
+            <router-link to="/admin/training" class="nav-link">
               <span class="nav-icon">🎓</span>
               <span>Program Training</span>
+            </router-link>
+            <router-link to="/admin/analytics" class="nav-link">
+              <span class="nav-icon">📈</span>
+              <span>System Analytics</span>
             </router-link>
           </div>
 
           <div class="nav-section">
             <h3 class="nav-section-title">Simulation</h3>
-            <router-link to="/simulation/assignments" class="nav-link">
-              <span class="nav-icon">📋</span>
-              <span>Assignment Module</span>
-            </router-link>
-            <router-link to="/simulation/distance" class="nav-link">
-              <span class="nav-icon">📏</span>
-              <span>Distance Calculation</span>
+            <router-link to="/admin/simulations" class="nav-link">
+              <span class="nav-icon">🔬</span>
+              <span>Simulation Modules</span>
             </router-link>
           </div>
         </template>
@@ -57,29 +57,37 @@
         <!-- Student Links -->
         <template v-else>
           <div class="nav-section">
-            <router-link to="/dashboard" class="nav-link">
+            <router-link to="/student/dashboard" class="nav-link">
               <span class="nav-icon">🏠</span>
               <span>Dashboard</span>
             </router-link>
           </div>
 
           <div class="nav-section">
-            <h3 class="nav-section-title">Simulation</h3>
-            <router-link to="/tasks/distance" class="nav-link">
-              <span class="nav-icon">📏</span>
-              <span>Distance Calculation</span>
-            </router-link>
-            <router-link to="/tasks/interaction" class="nav-link">
-              <span class="nav-icon">🖱️</span>
-              <span>Interaction Output</span>
+            <h3 class="nav-section-title">Learning</h3>
+            <router-link to="/student/simulations" class="nav-link">
+              <span class="nav-icon">🔬</span>
+              <span>Simulation Tasks</span>
             </router-link>
           </div>
 
           <div class="nav-section">
             <h3 class="nav-section-title">Collaboration</h3>
-            <router-link to="/forum" class="nav-link">
+            <router-link to="/student/forum" class="nav-link">
               <span class="nav-icon">💬</span>
               <span>Discussion Forum</span>
+            </router-link>
+            <router-link to="/student/feedback" class="nav-link">
+              <span class="nav-icon">📝</span>
+              <span>Feedback Messages</span>
+            </router-link>
+          </div>
+
+          <div class="nav-section">
+            <h3 class="nav-section-title">Account</h3>
+            <router-link to="/student/settings" class="nav-link">
+              <span class="nav-icon">⚙️</span>
+              <span>Settings</span>
             </router-link>
           </div>
         </template>
