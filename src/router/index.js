@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 
 // Admin Components
 import AdminDashboard from '@/views/admin/AdminDashboard.vue'
@@ -21,6 +20,7 @@ import Login from '@/views/auth/Login.vue'
 import NotFound from '@/views/NotFound.vue'
 import Landing from '@/views/Landing.vue'
 
+// Basic route definitions
 const routes = [
   {
     path: '/',
@@ -128,26 +128,23 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore()
-  
-  // Initialize auth state if not already loaded
-  if (!authStore.initialized) {
-    await authStore.init()
+// TEMPORARY basic auth check logic using localStorage or hardcoded role
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = !!localStorage.getItem('user') // use Firebase in real app
+  const userRole = localStorage.getItem('role') || 'student' // example fallback
+
+  if (to.meta.requiresAuth) {
+    if (!isAuthenticated) {
+      return next('/login')
+    }
+    if (to.meta.role && to.meta.role !== userRole) {
+      return next(userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard')
+    }
+  } else if (to.meta.requiresGuest && isAuthenticated) {
+    return next(userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard')
   }
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    next('/login')
-  } 
-  else if (to.meta.requiresAuth && to.meta.role !== (authStore.isAdmin ? 'admin' : 'student')) {
-    next(authStore.isAdmin ? '/admin/dashboard' : '/student/dashboard')
-  } 
-  else if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    next(authStore.isAdmin ? '/admin/dashboard' : '/student/dashboard')
-  }
-  else {
-    next()
-  }
+  next()
 })
 
 export default router

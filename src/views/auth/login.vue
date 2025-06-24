@@ -16,17 +16,35 @@
               </defs>
             </svg>
           </div>
-          <h1>Welcome Back</h1>
-          <p>Sign in to your account</p>
+          <h1>{{ isRegistering ? 'Create Account' : 'Welcome Back' }}</h1>
+          <p>{{ isRegistering ? 'Join our platform today' : 'Sign in to your account' }}</p>
         </div>
       </div>
 
+      <!-- Toggle Buttons -->
+      <div class="toggle-buttons">
+        <button 
+          type="button" 
+          :class="['toggle-btn', { active: !isRegistering }]"
+          @click="switchToLogin"
+        >
+          Sign In
+        </button>
+        <button 
+          type="button" 
+          :class="['toggle-btn', { active: isRegistering }]"
+          @click="switchToRegister"
+        >
+          Sign Up
+        </button>
+      </div>
+
       <!-- Error Message -->
-      <div v-if="auth.error" class="alert alert-error">
+      <div v-if="error" class="alert alert-error">
         <svg class="alert-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
         </svg>
-        {{ auth.error }}
+        {{ error }}
       </div>
 
       <!-- Success Message -->
@@ -37,14 +55,29 @@
         Password reset email sent. Please check your inbox.
       </div>
 
+      <!-- Registration Success Message -->
+      <div v-if="registrationSuccess" class="alert alert-success">
+        <svg class="alert-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        Account created successfully! Please sign in with your credentials.
+      </div>
+
       <!-- Login Form -->
-      <form @submit.prevent="handleLogin" class="login-form">
+      <form v-if="!isRegistering" @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
           <label for="email" class="form-label">
             Email Address
           </label>
           <div class="input-wrapper">
-            <input type="email" id="email" v-model="formData.email" required class="form-input" placeholder="Enter your email">
+            <input 
+              type="email" 
+              id="email" 
+              v-model="formData.email" 
+              required 
+              class="form-input" 
+              placeholder="Enter your email"
+            >
           </div>
         </div>
 
@@ -53,7 +86,14 @@
             Password
           </label>
           <div class="input-wrapper">
-            <input :type="showPassword ? 'text' : 'password'" id="password" v-model="formData.password" required class="form-input" placeholder="Enter your password">
+            <input 
+              :type="showPassword ? 'text' : 'password'" 
+              id="password" 
+              v-model="formData.password" 
+              required 
+              class="form-input" 
+              placeholder="Enter your password"
+            >
             <button type="button" class="password-toggle" @click="showPassword = !showPassword">
               <span v-if="!showPassword">Show</span>
               <span v-else>Hide</span>
@@ -62,9 +102,9 @@
         </div>
 
         <div class="form-actions">
-          <button type="submit" :disabled="auth.loading" class="btn-primary">
-            <span v-if="auth.loading" class="loading-spinner"></span>
-            {{ auth.loading ? 'Signing in...' : 'Sign In' }}
+          <button type="submit" :disabled="loading" class="btn-primary">
+            <span v-if="loading" class="loading-spinner"></span>
+            {{ loading ? 'Signing in...' : 'Sign In' }}
           </button>
 
           <div class="forgot-password">
@@ -72,95 +112,337 @@
           </div>
         </div>
       </form>
+
+      <!-- Registration Form -->
+      <form v-else @submit.prevent="handleRegister" class="auth-form">
+        <div class="form-group">
+          <label for="reg-name" class="form-label">
+            Full Name
+          </label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="reg-name" 
+              v-model="registerData.name" 
+              required 
+              class="form-input" 
+              placeholder="Enter your full name"
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-email" class="form-label">
+            Email Address
+          </label>
+          <div class="input-wrapper">
+            <input 
+              type="email" 
+              id="reg-email" 
+              v-model="registerData.email" 
+              required 
+              class="form-input" 
+              placeholder="Enter your email"
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-role" class="form-label">
+            Account Type
+          </label>
+          <div class="input-wrapper">
+            <select 
+              id="reg-role" 
+              v-model="registerData.role" 
+              required 
+              class="form-select"
+            >
+              <option value="">Select account type</option>
+              <option value="student">Student</option>
+              <option value="admin">Administrator</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-password" class="form-label">
+            Password
+          </label>
+          <div class="input-wrapper">
+            <input 
+              :type="showRegPassword ? 'text' : 'password'" 
+              id="reg-password" 
+              v-model="registerData.password" 
+              required 
+              class="form-input" 
+              placeholder="Create a password"
+              minlength="6"
+            >
+            <button type="button" class="password-toggle" @click="showRegPassword = !showRegPassword">
+              <span v-if="!showRegPassword">Show</span>
+              <span v-else>Hide</span>
+            </button>
+          </div>
+          <p class="password-hint">Password must be at least 6 characters long</p>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-confirm-password" class="form-label">
+            Confirm Password
+          </label>
+          <div class="input-wrapper">
+            <input 
+              :type="showConfirmPassword ? 'text' : 'password'" 
+              id="reg-confirm-password" 
+              v-model="registerData.confirmPassword" 
+              required 
+              class="form-input" 
+              placeholder="Confirm your password"
+              :class="{ 'error': passwordMismatch }"
+            >
+            <button type="button" class="password-toggle" @click="showConfirmPassword = !showConfirmPassword">
+              <span v-if="!showConfirmPassword">Show</span>
+              <span v-else>Hide</span>
+            </button>
+          </div>
+          <p v-if="passwordMismatch" class="error-text">Passwords do not match</p>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" :disabled="loading || passwordMismatch" class="btn-primary">
+            <span v-if="loading" class="loading-spinner"></span>
+            {{ loading ? 'Creating Account...' : 'Create Account' }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { auth } from '@/firebase';
+import { 
+  onAuthStateChanged, 
+  signOut, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail
+} from 'firebase/auth';
 
-const auth = useAuthStore();
 const router = useRouter();
 
+// Auth state
+const user = ref(null);
+const loading = ref(false);
+const error = ref(null);
+const isAuthenticated = computed(() => user.value !== null);
+const isAdmin = computed(() => user.value?.email === 'alvn4407@gmail.com');
+
+// Form states
+const isRegistering = ref(false);
+const showPassword = ref(false);
+const showRegPassword = ref(false);
+const showConfirmPassword = ref(false);
+const resetEmailSent = ref(false);
+const registrationSuccess = ref(false);
+
+// Form data
 const formData = ref({
   email: '',
   password: ''
 });
 
-const showPassword = ref(false);
-const resetEmailSent = ref(false);
+const registerData = ref({
+  name: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+  role: ''
+});
+
+// Computed properties
+const passwordMismatch = computed(() => {
+  return registerData.value.password && 
+         registerData.value.confirmPassword && 
+         registerData.value.password !== registerData.value.confirmPassword;
+});
+
+// Initialize auth state listener
+const initAuth = () => {
+  onAuthStateChanged(auth, (firebaseUser) => {
+    user.value = firebaseUser;
+    if (firebaseUser) {
+      redirectToDashboard(firebaseUser.role || 'student');
+    }
+  });
+};
+
+// Check if user is already authenticated on component mount
+onMounted(() => {
+  initAuth();
+});
+
+// Methods
+const switchToLogin = () => {
+  isRegistering.value = false;
+  error.value = null;
+  resetEmailSent.value = false;
+  registrationSuccess.value = false;
+};
+
+const switchToRegister = () => {
+  isRegistering.value = true;
+  error.value = null;
+  resetEmailSent.value = false;
+  registrationSuccess.value = false;
+};
+
+const redirectToDashboard = (userRole) => {
+  if (userRole === 'student') {
+    router.push('/student-dashboard');
+  } else if (userRole === 'admin') {
+    router.push('/admin-dashboard');
+  } else {
+    router.push('/student-dashboard'); // fallback to student dashboard
+  }
+};
 
 const handleLogin = async () => {
   resetEmailSent.value = false;
+  registrationSuccess.value = false;
+  loading.value = true;
+  error.value = null;
+  
   try {
-    const success = await auth.login(formData.value.email, formData.value.password);
+    const userCredential = await signInWithEmailAndPassword(
+      auth, 
+      formData.value.email, 
+      formData.value.password
+    );
+    
+    user.value = userCredential.user;
     
     // Special case for admin password reset
-    if (!success && formData.value.email === 'alvn4407@gmail.com') {
-      auth.error = 'Please contact the administrator for password reset.';
+    if (formData.value.email === 'alvn4407@gmail.com') {
+      error.value = 'Please contact the administrator for password reset.';
       return;
     }
 
-    // Redirect is now handled in the auth store
-  } catch (error) {
-    // Error handling is now centralized in the store
-    console.error('Login error:', error);
+    // Clear form data
+    formData.value = { email: '', password: '' };
+    
+    // Redirect based on role
+    redirectToDashboard(registerData.value.role || 'student');
+  } catch (err) {
+    console.error('Login error:', err);
+    error.value = 'Invalid email or password. Please try again.';
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleRegister = async () => {
+  if (passwordMismatch.value) {
+    error.value = 'Passwords do not match';
+    return;
+  }
+
+  if (registerData.value.password.length < 6) {
+    error.value = 'Password must be at least 6 characters long';
+    return;
+  }
+
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      registerData.value.email,
+      registerData.value.password
+    );
+    
+    user.value = userCredential.user;
+    
+    // Here you would typically save additional user data (name, role) to your database
+    // For now we'll just store it in the user object
+    user.value.role = registerData.value.role;
+    
+    // Store the registered email for convenience
+    const registeredEmail = registerData.value.email;
+    
+    // Clear form
+    registerData.value = {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      role: ''
+    };
+
+    // Set the registered email in login form for convenience
+    formData.value.email = registeredEmail;
+
+    // Show success message
+    registrationSuccess.value = true;
+    error.value = null;
+    
+    // Switch to login form after a short delay
+    setTimeout(() => {
+      isRegistering.value = false;
+    }, 1500);
+  } catch (err) {
+    console.error('Registration error:', err);
+    error.value = 'An error occurred during registration. Please try again.';
+  } finally {
+    loading.value = false;
   }
 };
 
 const resetPassword = async () => {
   if (!formData.value.email) {
-    auth.error = 'Please enter your email address first.';
+    error.value = 'Please enter your email address first.';
     return;
   }
 
   // Special handling for admin account
   if (formData.value.email === 'alvn4407@gmail.com') {
-    auth.error = 'Please contact the administrator for password reset.';
+    error.value = 'Please contact the administrator for password reset.';
     return;
   }
 
   try {
-    resetEmailSent.value = await auth.resetPassword(formData.value.email);
-  } catch (error) {
-    console.error('Password reset error:', error);
+    await sendPasswordResetEmail(auth, formData.value.email);
+    resetEmailSent.value = true;
+    error.value = null;
+  } catch (err) {
+    console.error('Password reset error:', err);
+    error.value = 'An error occurred during password reset. Please try again.';
   }
 };
 </script>
 
-
 <style scoped>
-* {
-  box-sizing: border-box;
-}
-
 .login-wrapper {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  position: relative;
-  overflow: hidden;
+  padding: 20px;
 }
 
 .login-container {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   padding: 40px;
   width: 100%;
-  max-width: 440px;
-  box-shadow: 
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  position: relative;
-  z-index: 10;
-  animation: slideUp 0.6s ease-out;
+  max-width: 450px;
+  animation: slideUp 0.5s ease-out;
 }
 
 @keyframes slideUp {
@@ -176,38 +458,62 @@ const resetPassword = async () => {
 
 .login-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 30px;
 }
 
 .logo-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
 }
 
 .logo-icon {
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  margin-bottom: 10px;
 }
 
 .login-header h1 {
   font-size: 28px;
   font-weight: 700;
-  color: #1f2937;
+  color: #1a202c;
   margin: 0;
-  letter-spacing: -0.025em;
 }
 
 .login-header p {
+  color: #718096;
   font-size: 16px;
-  color: #6b7280;
   margin: 0;
-  font-weight: 400;
+}
+
+.toggle-buttons {
+  display: flex;
+  background: #f7fafc;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 30px;
+  gap: 4px;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #718096;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-btn.active {
+  background: white;
+  color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
+.toggle-btn:hover:not(.active) {
+  color: #4a5568;
 }
 
 .alert {
@@ -216,43 +522,30 @@ const resetPassword = async () => {
   gap: 12px;
   padding: 16px;
   border-radius: 12px;
-  margin-bottom: 24px;
-  font-size: 14px;
+  margin-bottom: 20px;
   font-weight: 500;
-  animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
 }
 
 .alert-error {
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
+  background: #fed7d7;
+  color: #c53030;
+  border: 1px solid #feb2b2;
 }
 
 .alert-success {
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #16a34a;
+  background: #c6f6d5;
+  color: #2f855a;
+  border: 1px solid #9ae6b4;
 }
 
 .alert-icon {
   flex-shrink: 0;
 }
 
-.login-form {
+.auth-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .form-group {
@@ -262,81 +555,87 @@ const resetPassword = async () => {
 }
 
 .form-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
   font-weight: 600;
-  color: #374151;
-}
-
-.label-icon {
-  color: #6b7280;
+  color: #2d3748;
+  font-size: 14px;
 }
 
 .input-wrapper {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.form-input {
+.form-input,
+.form-select {
   width: 100%;
   padding: 16px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #e2e8f0;
   border-radius: 12px;
   font-size: 16px;
-  font-weight: 400;
-  color: #1f2937;
-  background-color: #ffffff;
+  background: white;
   transition: all 0.3s ease;
-  outline: none;
 }
 
-.form-input:focus {
+.form-input:focus,
+.form-select:focus {
+  outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  transform: translateY(-1px);
 }
 
-.form-input::placeholder {
-  color: #9ca3af;
+.form-input.error {
+  border-color: #e53e3e;
 }
 
-.input-error {
-  border-color: #ef4444 !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+.form-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
 }
 
 .password-toggle {
   position: absolute;
   right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
   background: none;
   border: none;
-  color: #6b7280;
+  color: #667eea;
+  font-weight: 500;
   cursor: pointer;
-  padding: 4px;
+  font-size: 14px;
+  padding: 4px 8px;
   border-radius: 6px;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .password-toggle:hover {
-  color: #374151;
-  background-color: #f3f4f6;
+  background: #f7fafc;
+}
+
+.password-hint {
+  font-size: 12px;
+  color: #718096;
+  margin: 0;
+}
+
+.error-text {
+  font-size: 12px;
+  color: #e53e3e;
+  margin: 0;
 }
 
 .form-actions {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  margin-top: 8px;
+  gap: 16px;
+  margin-top: 10px;
 }
 
 .btn-primary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   width: 100%;
   padding: 16px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -347,32 +646,31 @@ const resetPassword = async () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-}
-
-.btn-primary:active:not(:disabled) {
-  transform: translateY(0);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 
 .btn-primary:disabled {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
   border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
@@ -388,9 +686,9 @@ const resetPassword = async () => {
 .forgot-link {
   color: #667eea;
   text-decoration: none;
-  font-size: 14px;
   font-weight: 500;
-  transition: color 0.2s ease;
+  font-size: 14px;
+  transition: color 0.3s ease;
 }
 
 .forgot-link:hover {
@@ -398,96 +696,22 @@ const resetPassword = async () => {
   text-decoration: underline;
 }
 
-.bg-decoration {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.bg-circle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  animation: float 6s ease-in-out infinite;
-}
-
-.bg-circle-1 {
-  width: 300px;
-  height: 300px;
-  top: -150px;
-  right: -150px;
-  animation-delay: 0s;
-}
-
-.bg-circle-2 {
-  width: 200px;
-  height: 200px;
-  bottom: -100px;
-  left: -100px;
-  animation-delay: 2s;
-}
-
-.bg-circle-3 {
-  width: 150px;
-  height: 150px;
-  top: 50%;
-  left: -75px;
-  animation-delay: 4s;
-}
-
 /* Responsive Design */
 @media (max-width: 480px) {
   .login-container {
-    padding: 24px;
+    padding: 30px 20px;
     margin: 10px;
-    border-radius: 16px;
   }
   
   .login-header h1 {
     font-size: 24px;
   }
   
-  .form-input {
-    padding: 14px;
-    font-size: 16px;
-  }
-  
+  .form-input,
+  .form-select,
   .btn-primary {
     padding: 14px;
-  }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .login-container {
-    background: rgba(17, 24, 39, 0.95);
-    border: 1px solid rgba(75, 85, 99, 0.3);
-  }
-  
-  .login-header h1 {
-    color: #f9fafb;
-  }
-  
-  .login-header p {
-    color: #d1d5db;
-  }
-  
-  .form-label {
-    color: #f3f4f6;
-  }
-  
-  .form-input {
-    background-color: #374151;
-    border-color: #4b5563;
-    color: #f9fafb;
-  }
-  
-  .form-input:focus {
-    border-color: #667eea;
+    font-size: 16px;
   }
 }
 </style>

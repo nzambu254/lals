@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <!-- Loading state -->
-    <div v-if="auth.loading" class="loading-spinner">
+    <div v-if="loading" class="loading-spinner">
       <div class="spinner"></div>
     </div>
 
@@ -19,15 +19,15 @@
             <h1>GeoLearn System</h1>
           </div>
           <div class="nav-right">
-            <span class="user-email">{{ auth.currentUserEmail }}</span>
-            <button @click="auth.logout" class="logout-btn">Logout</button>
+            <span class="user-email">{{ currentUserEmail }}</span>
+            <button @click="logout" class="logout-btn">Logout</button>
           </div>
         </div>
       </nav>
 
       <!-- Main Content with Fixed Sidebar -->
       <div class="main-container">
-        <Sidebar :isAdmin="auth.isAdmin" />
+        <Sidebar :isAdmin="isAdmin" />
         <div class="content-wrapper">
           <router-view />
         </div>
@@ -37,13 +37,20 @@
 </template>
 
 <script setup>
-import { onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import { ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { auth } from '@/firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import Sidebar from '@/components/Sidebar.vue';
 
-const auth = useAuthStore();
+const router = useRouter();
 const route = useRoute();
+
+// Auth state
+const user = ref(null);
+const loading = ref(true);
+const currentUserEmail = computed(() => user.value?.email || '');
+const isAdmin = computed(() => currentUserEmail.value === 'alvn4407@gmail.com');
 
 // Check if current route is a guest page (landing or login)
 const isGuestPage = computed(() => {
@@ -51,8 +58,35 @@ const isGuestPage = computed(() => {
   return guestRoutes.includes(route.path) || guestRoutes.includes(route.name);
 });
 
+// Initialize auth state listener
+const initAuth = () => {
+  return new Promise((resolve) => {
+    onAuthStateChanged(auth, (firebaseUser) => {
+      user.value = firebaseUser;
+      loading.value = false;
+      resolve();
+    });
+  });
+};
+
+// Logout function
+const logout = async () => {
+  try {
+    await signOut(auth);
+    user.value = null;
+    router.push('/login');
+  } catch (error) {
+    console.error('Logout error:', error);
+  }
+};
+
 onMounted(async () => {
-  await auth.init();
+  await initAuth();
+  
+  // Redirect to login if not authenticated and not on a guest page
+  if (!user.value && !isGuestPage.value) {
+    router.push('/login');
+  }
 });
 </script>
 
