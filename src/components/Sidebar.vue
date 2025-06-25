@@ -34,18 +34,6 @@
           </div>
 
           <div class="nav-section">
-            <h3 class="nav-section-title">Training & Analytics</h3>
-            <router-link to="/admin/training" class="nav-link">
-              <span class="nav-icon">🎓</span>
-              <span>Program Training</span>
-            </router-link>
-            <router-link to="/admin/analytics" class="nav-link">
-              <span class="nav-icon">📈</span>
-              <span>System Analytics</span>
-            </router-link>
-          </div>
-
-          <div class="nav-section">
             <h3 class="nav-section-title">Simulation</h3>
             <router-link to="/admin/simulations" class="nav-link">
               <span class="nav-icon">🔬</span>
@@ -65,29 +53,21 @@
 
           <div class="nav-section">
             <h3 class="nav-section-title">Learning</h3>
+            <router-link to="/student/visualization" class="nav-link">
+              <span class="nav-icon">📊</span>
+              <span>Visualization Module</span>
+            </router-link>
             <router-link to="/student/simulations" class="nav-link">
               <span class="nav-icon">🔬</span>
               <span>Simulation Tasks</span>
             </router-link>
-          </div>
-
-          <div class="nav-section">
-            <h3 class="nav-section-title">Collaboration</h3>
-            <router-link to="/student/forum" class="nav-link">
-              <span class="nav-icon">💬</span>
-              <span>Discussion Forum</span>
+            <router-link to="/student/distance-calculation" class="nav-link">
+              <span class="nav-icon">📏</span>
+              <span>Distance Calculation</span>
             </router-link>
-            <router-link to="/student/feedback" class="nav-link">
-              <span class="nav-icon">📝</span>
-              <span>Feedback Messages</span>
-            </router-link>
-          </div>
-
-          <div class="nav-section">
-            <h3 class="nav-section-title">Account</h3>
-            <router-link to="/student/settings" class="nav-link">
-              <span class="nav-icon">⚙️</span>
-              <span>Settings</span>
+            <router-link to="/student/interactive-quizzes" class="nav-link">
+              <span class="nav-icon">🎯</span>
+              <span>Interactive Quizzes</span>
             </router-link>
           </div>
         </template>

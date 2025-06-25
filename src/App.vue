@@ -15,9 +15,7 @@
       <!-- Top Navigation Bar -->
       <nav class="top-nav">
         <div class="nav-content">
-          <div class="nav-left">
-            <h1>GeoLearn System</h1>
-          </div>
+          <h1 class="system-title">Longitude & Latitude Learning System</h1>
           <div class="nav-right">
             <span class="user-email">{{ currentUserEmail }}</span>
             <button @click="logout" class="logout-btn">Logout</button>
@@ -46,19 +44,16 @@ import Sidebar from '@/components/Sidebar.vue';
 const router = useRouter();
 const route = useRoute();
 
-// Auth state
 const user = ref(null);
 const loading = ref(true);
 const currentUserEmail = computed(() => user.value?.email || '');
 const isAdmin = computed(() => currentUserEmail.value === 'alvn4407@gmail.com');
 
-// Check if current route is a guest page (landing or login)
 const isGuestPage = computed(() => {
   const guestRoutes = ['/', '/login', 'Home', 'Login'];
   return guestRoutes.includes(route.path) || guestRoutes.includes(route.name);
 });
 
-// Initialize auth state listener
 const initAuth = () => {
   return new Promise((resolve) => {
     onAuthStateChanged(auth, (firebaseUser) => {
@@ -69,7 +64,6 @@ const initAuth = () => {
   });
 };
 
-// Logout function
 const logout = async () => {
   try {
     await signOut(auth);
@@ -82,8 +76,6 @@ const logout = async () => {
 
 onMounted(async () => {
   await initAuth();
-  
-  // Redirect to login if not authenticated and not on a guest page
   if (!user.value && !isGuestPage.value) {
     router.push('/login');
   }
@@ -113,7 +105,7 @@ onMounted(async () => {
 .content-wrapper {
   flex: 1;
   padding: 20px;
-  margin-left: 40px; /* Same as sidebar width */
+  margin-left: 40px;
   background-color: #f5f7fa;
 }
 
@@ -135,13 +127,13 @@ onMounted(async () => {
   align-items: center;
   height: 100%;
   padding: 0 20px;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
-.nav-left h1 {
+.system-title {
   font-size: 1.2rem;
   color: #2d3748;
+  margin: 0;
+  padding-left: 0;
 }
 
 .nav-right {
@@ -195,7 +187,7 @@ onMounted(async () => {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .content-wrapper {
-    margin-left: 70px; /* Collapsed sidebar width */
+    margin-left: 70px;
   }
 }
 </style>

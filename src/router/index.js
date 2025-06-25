@@ -8,16 +8,14 @@ import { db } from '@/firebase'
 import AdminDashboard from '@/views/admin/AdminDashboard.vue'
 import UserManagement from '@/views/admin/UserManagement.vue'
 import ContentCreation from '@/views/admin/ContentCreation.vue'
-import ProgramTraining from '@/views/admin/ProgramTraining.vue'
 import SimulationModules from '@/views/admin/SimulationModules.vue'
-import SystemAnalytics from '@/views/admin/SystemAnalytics.vue'
 
 // Student Components
 import StudentDashboard from '@/views/student/StudentDashboard.vue'
 import SimulationTasks from '@/views/student/SimulationTasks.vue'
-import CollaborationForum from '@/views/student/CollaborationForum.vue'
-import FeedbackMessages from '@/views/student/FeedbackMessages.vue'
-import StudentSettings from '@/views/student/StudentSettings.vue'
+import VisualizationModule from '@/views/student/VisualizationModule.vue'
+import DistanceCalculation from '@/views/student/DistanceCalculation.vue'
+import InteractiveQuizzes from '@/views/student/InteractiveQuizzes.vue'
 
 // Shared Components
 import Login from '@/views/auth/Login.vue'
@@ -85,21 +83,9 @@ const routes = [
     meta: { requiresAuth: true, role: 'admin' }
   },
   {
-    path: '/admin/training',
-    name: 'ProgramTraining',
-    component: ProgramTraining,
-    meta: { requiresAuth: true, role: 'admin' }
-  },
-  {
     path: '/admin/simulations',
     name: 'SimulationModules',
     component: SimulationModules,
-    meta: { requiresAuth: true, role: 'admin' }
-  },
-  {
-    path: '/admin/analytics',
-    name: 'SystemAnalytics',
-    component: SystemAnalytics,
     meta: { requiresAuth: true, role: 'admin' }
   },
 
@@ -122,21 +108,21 @@ const routes = [
     meta: { requiresAuth: true, role: 'student' }
   },
   {
-    path: '/student/forum',
-    name: 'CollaborationForum',
-    component: CollaborationForum,
+    path: '/student/visualization',
+    name: 'VisualizationModule',
+    component: VisualizationModule,
     meta: { requiresAuth: true, role: 'student' }
   },
   {
-    path: '/student/feedback',
-    name: 'FeedbackMessages',
-    component: FeedbackMessages,
+    path: '/student/distance-calculation',
+    name: 'DistanceCalculation',
+    component: DistanceCalculation,
     meta: { requiresAuth: true, role: 'student' }
   },
   {
-    path: '/student/settings',
-    name: 'StudentSettings',
-    component: StudentSettings,
+    path: '/student/interactive-quizzes',
+    name: 'InteractiveQuizzes',
+    component: InteractiveQuizzes,
     meta: { requiresAuth: true, role: 'student' }
   },
 
