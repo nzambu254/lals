@@ -93,9 +93,13 @@
         </template>
       </nav>
 
-      <!-- Footer (Toggle Sidebar) -->
+      <!-- Footer (Toggle Sidebar + Logout) -->
       <div class="sidebar-footer">
-        <button @click="toggleSidebar" class="toggle-button">
+        <button @click="handleLogout" class="logout-button" title="Logout">
+          <span class="logout-icon">🚪</span>
+          <span v-if="isSidebarOpen">Logout</span>
+        </button>
+        <button @click="toggleSidebar" class="toggle-button" title="Toggle Sidebar">
           <span class="toggle-icon">{{ isSidebarOpen ? '◀' : '▶' }}</span>
         </button>
       </div>
@@ -110,19 +114,40 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { auth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 const props = defineProps({
   isAdmin: { type: Boolean, default: false },
 });
 
+const router = useRouter();
 const isSidebarOpen = ref(true);
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value;
 };
+
+const handleLogout = async () => {
+  try {
+    await signOut(auth);
+    // Clear localStorage
+    localStorage.removeItem('user');
+    localStorage.removeItem('role');
+    // Redirect to login
+    router.push('/login');
+  } catch (error) {
+    console.error('Logout error:', error);
+  }
+};
 </script>
 
 <style scoped>
+.sidebar-container {
+  display: flex;
+  min-height: 100vh;
+}
 
 /* Sidebar */
 .sidebar {
@@ -132,6 +157,9 @@ const toggleSidebar = () => {
   transition: width 0.3s ease;
   display: flex;
   flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  z-index: 100;
 }
 
 .sidebar-collapsed {
@@ -169,6 +197,7 @@ const toggleSidebar = () => {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
+  margin: 0;
 }
 
 .nav-link {
@@ -206,9 +235,12 @@ const toggleSidebar = () => {
   padding: 10px;
   border-top: 1px solid #e2e8f0;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
 }
 
+.logout-button,
 .toggle-button {
   background: none;
   border: none;
@@ -216,16 +248,26 @@ const toggleSidebar = () => {
   padding: 8px;
   border-radius: 4px;
   transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4a5568;
+  font-size: 0.9rem;
 }
 
+.logout-button:hover,
 .toggle-button:hover {
   background-color: #edf2f7;
 }
 
+.logout-button:hover {
+  color: #e53e3e;
+}
+
+.logout-icon,
 .toggle-icon {
   width: 20px;
   height: 20px;
-  color: #4a5568;
   font-size: 1rem;
   display: flex;
   align-items: center;
@@ -236,16 +278,17 @@ const toggleSidebar = () => {
 .main-content {
   flex: 1;
   padding: 20px;
+  margin-left: 270px;
   transition: margin-left 0.3s ease;
-  margin-left: 50px;
+  min-height: 100vh;
 }
 
 .main-content.expanded {
-  margin-left: 50px;
+  margin-left: 70px;
 }
 
 /* Responsive design */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .sidebar {
     position: fixed;
     top: 0;
@@ -263,5 +306,22 @@ const toggleSidebar = () => {
   .main-content {
     margin-left: 0;
   }
+  
+  .main-content.expanded {
+    margin-left: 0;
+  }
+}
+
+/* Collapsed sidebar adjustments */
+.sidebar-collapsed .nav-section-title {
+  display: none;
+}
+
+.sidebar-collapsed .nav-link span:not(.nav-icon) {
+  display: none;
+}
+
+.sidebar-collapsed .logout-button span:not(.logout-icon) {
+  display: none;
 }
 </style>

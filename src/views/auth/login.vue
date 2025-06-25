@@ -221,7 +221,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { auth } from '@/firebase';
 import { 
@@ -231,6 +231,8 @@ import {
   createUserWithEmailAndPassword,
   sendPasswordResetEmail
 } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { db } from '@/firebase';
 
 const router = useRouter();
 
@@ -239,7 +241,6 @@ const user = ref(null);
 const loading = ref(false);
 const error = ref(null);
 const isAuthenticated = computed(() => user.value !== null);
-const isAdmin = computed(() => user.value?.email === 'alvn4407@gmail.com');
 
 // Form states
 const isRegistering = ref(false);
@@ -263,6 +264,9 @@ const registerData = ref({
   role: ''
 });
 
+// Auth state listener
+let unsubscribe = null;
+
 // Computed properties
 const passwordMismatch = computed(() => {
   return registerData.value.password && 
@@ -270,12 +274,44 @@ const passwordMismatch = computed(() => {
          registerData.value.password !== registerData.value.confirmPassword;
 });
 
+// Get user role from Firestore
+const getUserRole = async (uid) => {
+  try {
+    const docRef = doc(db, "users", uid);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data().role : 'student';
+  } catch (err) {
+    console.error("Error getting user role:", err);
+    return 'student';
+  }
+};
+
+// Redirect to appropriate dashboard
+const redirectToDashboard = (userRole) => {
+  if (userRole === 'admin') {
+    router.push('/admin/dashboard');
+  } else {
+    router.push('/student/dashboard');
+  }
+};
+
 // Initialize auth state listener
 const initAuth = () => {
-  onAuthStateChanged(auth, (firebaseUser) => {
-    user.value = firebaseUser;
+  unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
-      redirectToDashboard(firebaseUser.role || 'student');
+      user.value = firebaseUser;
+      const userRole = await getUserRole(firebaseUser.uid);
+      
+      // Set localStorage for router guard
+      localStorage.setItem('user', JSON.stringify({
+        uid: firebaseUser.uid,
+        email: firebaseUser.email
+      }));
+      localStorage.setItem('role', userRole);
+    } else {
+      user.value = null;
+      localStorage.removeItem('user');
+      localStorage.removeItem('role');
     }
   });
 };
@@ -283,6 +319,13 @@ const initAuth = () => {
 // Check if user is already authenticated on component mount
 onMounted(() => {
   initAuth();
+});
+
+// Cleanup on unmount
+onUnmounted(() => {
+  if (unsubscribe) {
+    unsubscribe();
+  }
 });
 
 // Methods
@@ -300,16 +343,6 @@ const switchToRegister = () => {
   registrationSuccess.value = false;
 };
 
-const redirectToDashboard = (userRole) => {
-  if (userRole === 'student') {
-    router.push('/student-dashboard');
-  } else if (userRole === 'admin') {
-    router.push('/admin-dashboard');
-  } else {
-    router.push('/student-dashboard'); // fallback to student dashboard
-  }
-};
-
 const handleLogin = async () => {
   resetEmailSent.value = false;
   registrationSuccess.value = false;
@@ -325,17 +358,21 @@ const handleLogin = async () => {
     
     user.value = userCredential.user;
     
-    // Special case for admin password reset
-    if (formData.value.email === 'alvn4407@gmail.com') {
-      error.value = 'Please contact the administrator for password reset.';
-      return;
-    }
+    // Get user role from database
+    const userRole = await getUserRole(user.value.uid);
+    
+    // Set localStorage for router guard
+    localStorage.setItem('user', JSON.stringify({
+      uid: user.value.uid,
+      email: user.value.email
+    }));
+    localStorage.setItem('role', userRole);
 
     // Clear form data
     formData.value = { email: '', password: '' };
     
     // Redirect based on role
-    redirectToDashboard(registerData.value.role || 'student');
+    redirectToDashboard(userRole);
   } catch (err) {
     console.error('Login error:', err);
     error.value = 'Invalid email or password. Please try again.';
@@ -365,11 +402,13 @@ const handleRegister = async () => {
       registerData.value.password
     );
     
-    user.value = userCredential.user;
-    
-    // Here you would typically save additional user data (name, role) to your database
-    // For now we'll just store it in the user object
-    user.value.role = registerData.value.role;
+    // Save additional user data to Firestore
+    await setDoc(doc(db, "users", userCredential.user.uid), {
+      name: registerData.value.name,
+      email: registerData.value.email,
+      role: registerData.value.role,
+      createdAt: new Date()
+    });
     
     // Store the registered email for convenience
     const registeredEmail = registerData.value.email;
@@ -386,17 +425,25 @@ const handleRegister = async () => {
     // Set the registered email in login form for convenience
     formData.value.email = registeredEmail;
 
-    // Show success message
+    // Show success message and switch to login
     registrationSuccess.value = true;
     error.value = null;
+    
+    // Sign out the user so they need to login manually
+    await signOut(auth);
     
     // Switch to login form after a short delay
     setTimeout(() => {
       isRegistering.value = false;
-    }, 1500);
+      registrationSuccess.value = false;
+    }, 2000);
   } catch (err) {
     console.error('Registration error:', err);
-    error.value = 'An error occurred during registration. Please try again.';
+    if (err.code === 'auth/email-already-in-use') {
+      error.value = 'This email is already registered. Please use a different email or try signing in.';
+    } else {
+      error.value = 'An error occurred during registration. Please try again.';
+    }
   } finally {
     loading.value = false;
   }

@@ -1,4 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { auth } from '@/firebase'
+import { onAuthStateChanged } from 'firebase/auth'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/firebase'
 
 // Admin Components
 import AdminDashboard from '@/views/admin/AdminDashboard.vue'
@@ -20,7 +24,28 @@ import Login from '@/views/auth/Login.vue'
 import NotFound from '@/views/NotFound.vue'
 import Landing from '@/views/Landing.vue'
 
-// Basic route definitions
+// Helper function to get user role from Firestore
+const getUserRole = async (uid) => {
+  try {
+    const docRef = doc(db, "users", uid);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data().role : 'student';
+  } catch (err) {
+    console.error("Error getting user role:", err);
+    return 'student';
+  }
+};
+
+// Promise to wait for auth state
+const getCurrentUser = () => {
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe();
+      resolve(user);
+    }, reject);
+  });
+};
+
 const routes = [
   {
     path: '/',
@@ -128,23 +153,50 @@ const router = createRouter({
   routes
 })
 
-// TEMPORARY basic auth check logic using localStorage or hardcoded role
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = !!localStorage.getItem('user') // use Firebase in real app
-  const userRole = localStorage.getItem('role') || 'student' // example fallback
-
-  if (to.meta.requiresAuth) {
-    if (!isAuthenticated) {
-      return next('/login')
+// Enhanced route guard with proper Firebase auth checking
+router.beforeEach(async (to, from, next) => {
+  try {
+    // Wait for Firebase auth to initialize
+    const currentUser = await getCurrentUser();
+    
+    if (to.meta.requiresAuth) {
+      // Route requires authentication
+      if (!currentUser) {
+        console.log('No authenticated user, redirecting to login');
+        return next('/login');
+      }
+      
+      // Check role-based access
+      if (to.meta.role) {
+        const userRole = await getUserRole(currentUser.uid);
+        
+        if (to.meta.role !== userRole) {
+          console.log(`Role mismatch. Required: ${to.meta.role}, User: ${userRole}`);
+          // Redirect to appropriate dashboard based on user's actual role
+          const redirectPath = userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard';
+          return next(redirectPath);
+        }
+      }
+    } else if (to.meta.requiresGuest) {
+      // Route requires no authentication (login, landing page)
+      if (currentUser) {
+        console.log('User already authenticated, redirecting to dashboard');
+        const userRole = await getUserRole(currentUser.uid);
+        const redirectPath = userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard';
+        return next(redirectPath);
+      }
     }
-    if (to.meta.role && to.meta.role !== userRole) {
-      return next(userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard')
+    
+    next();
+  } catch (error) {
+    console.error('Router guard error:', error);
+    // If there's an error with auth, redirect to login for protected routes
+    if (to.meta.requiresAuth) {
+      next('/login');
+    } else {
+      next();
     }
-  } else if (to.meta.requiresGuest && isAuthenticated) {
-    return next(userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard')
   }
-
-  next()
-})
+});
 
 export default router
