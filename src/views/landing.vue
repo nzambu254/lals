@@ -3,7 +3,7 @@
     <!-- Hero Section -->
     <header class="hero-section">
       <div class="hero-content">
-        <h1 class="hero-title">🌍 GeoLearn System</h1>
+        <h1 class="hero-title">🌍 Longitude and latitudes learning System</h1>
         <p class="subtitle">Master Geographic Coordinates with Interactive Learning</p>
         <div class="cta-buttons">
           <button @click="navigateToLogin" class="cta-btn primary">Login</button>
