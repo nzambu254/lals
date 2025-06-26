@@ -1,490 +1,607 @@
 <template>
-  <div class="quizzes-container">
-    <h1>Geographic Coordinates Quiz</h1>
-    
-    <div v-if="!quizCompleted" class="quiz-section">
-      <div class="quiz-progress">
-        Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}
-        <div class="progress-bar">
-          <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
-        </div>
-      </div>
-      
-      <div class="question-container">
-        <h3>{{ currentQuestion.question }}</h3>
-        
-        <div v-if="currentQuestion.type === 'multiple-choice'" class="options">
-          <button 
-            v-for="(option, index) in currentQuestion.options" 
-            :key="index"
-            @click="selectAnswer(option)"
-            :class="{ 
-              'selected': selectedAnswer === option,
-              'correct': showFeedback && option === currentQuestion.answer,
-              'incorrect': showFeedback && selectedAnswer === option && option !== currentQuestion.answer
-            }"
-          >
-            {{ option }}
-          </button>
-        </div>
-        
-        <div v-else-if="currentQuestion.type === 'map-click'" class="map-quiz">
-          <div class="map-display" ref="mapDisplay" @click="handleMapClick">
-            <div class="grid-lines">
-              <div class="equator"></div>
-              <div class="prime-meridian"></div>
-            </div>
-            <div 
-              v-if="selectedCoordinates" 
-              class="selected-point"
-              :style="{
-                left: selectedCoordinates.x + '%',
-                top: selectedCoordinates.y + '%'
-              }"
-            ></div>
-            <div 
-              v-if="showFeedback && currentQuestion.answer" 
-              class="correct-point"
-              :style="{
-                left: currentQuestion.answer.x + '%',
-                top: currentQuestion.answer.y + '%'
-              }"
-            ></div>
-          </div>
-          <div class="coordinates-display">
-            <p v-if="selectedCoordinates">
-              Selected: {{ formatMapCoordinates(selectedCoordinates) }}
-            </p>
-            <p v-if="showFeedback && currentQuestion.answer">
-              Correct: {{ formatMapCoordinates(currentQuestion.answer) }}
-            </p>
-          </div>
-        </div>
-        
-        <div v-if="showFeedback" class="feedback">
-          <p :class="{ 'correct-feedback': isAnswerCorrect, 'incorrect-feedback': !isAnswerCorrect }">
-            {{ isAnswerCorrect ? 'Correct!' : 'Incorrect' }}
-          </p>
-          <p class="explanation">{{ currentQuestion.explanation }}</p>
-        </div>
-        
-        <button 
-          v-if="!showFeedback && (selectedAnswer || selectedCoordinates)" 
-          @click="checkAnswer"
-          class="submit-btn"
-        >
-          Submit Answer
-        </button>
-        
-        <button 
-          v-else 
-          @click="nextQuestion"
-          class="next-btn"
-        >
-          {{ isLastQuestion ? 'See Results' : 'Next Question' }}
-        </button>
-      </div>
+  <div class="geo-quiz-container">
+    <div class="quiz-header">
+      <h1>Latitude & Longitude Practice</h1>
     </div>
-    
+
+    <div v-if="!quizCompleted" class="quiz-section">
+      <div v-for="(q, index) in questions" :key="index" class="question-block">
+        <h3>Q{{ index + 1 }}. {{ q.question }}</h3>
+        <textarea
+          v-model="userAnswers[index]"
+          rows="4"
+          placeholder="Type your answer here..."
+        ></textarea>
+      </div>
+
+      <button @click="submitQuiz" class="submit-btn">Submit Answers</button>
+    </div>
+
     <div v-else class="results-section">
-      <h2>Quiz Completed!</h2>
-      <p class="score">Your score: {{ score }} / {{ questions.length }}</p>
-      <p class="percentage">{{ Math.round((score / questions.length) * 100) }}%</p>
-      
-      <div class="breakdown">
-        <h3>Question Breakdown</h3>
-        <div v-for="(question, index) in questions" :key="index" class="question-review">
-          <p><strong>Q{{ index + 1 }}:</strong> {{ question.question }}</p>
-          <p :class="{ 'correct-answer': userAnswers[index] === question.answer, 'wrong-answer': userAnswers[index] !== question.answer }">
-            Your answer: {{ formatUserAnswer(userAnswers[index], question.type) }}
-          </p>
-          <p>Correct answer: {{ formatUserAnswer(question.answer, question.type) }}</p>
-          <p class="explanation">{{ question.explanation }}</p>
+      <h2>Quiz Results</h2>
+      <p class="score-display">Your Score: {{ score }} / {{ questions.length }}</p>
+
+      <div v-for="(q, index) in questions" :key="index" class="result-block">
+        <h4>Q{{ index + 1 }}. {{ q.question }}</h4>
+        <p><strong>Your Answer:</strong> {{ userAnswers[index] }}</p>
+        <p><strong>Correct Answer:</strong> {{ q.answer }}</p>
+        <p :class="{ correct: isCorrect(index), wrong: !isCorrect(index) }">
+          {{ isCorrect(index) ? '✅ Correct' : '❌ Incorrect' }}
+        </p>
+      </div>
+
+      <button @click="resetQuiz" class="retry-btn">Try Again</button>
+
+      <div v-if="lastQuizResult" class="last-quiz-section">
+        <h3>Your Last Quiz Performance</h3>
+        <p><strong>Date:</strong> {{ new Date(lastQuizResult.timestamp.toDate()).toLocaleString() }}</p>
+        <p><strong>Score:</strong> {{ lastQuizResult.score }} / {{ lastQuizResult.total }}</p>
+        <div class="last-quiz-answers">
+          <div v-for="(q, index) in questions" :key="'last-' + index" class="last-result-block">
+            <p><strong>Q{{ index + 1 }}:</strong> {{ q.question }}</p>
+            <p><strong>Your Answer:</strong> {{ lastQuizResult.answers[index] }}</p>
+            <p><strong>Correct Answer:</strong> {{ q.answer }}</p>
+            <p :class="{ correct: lastQuizResult.answers[index]?.trim().toLowerCase() === q.answer.trim().toLowerCase(), wrong: lastQuizResult.answers[index]?.trim().toLowerCase() !== q.answer.trim().toLowerCase() }">
+              {{ lastQuizResult.answers[index]?.trim().toLowerCase() === q.answer.trim().toLowerCase() ? '✅ Correct' : '❌ Incorrect' }}
+            </p>
+          </div>
         </div>
       </div>
-      
-      <button @click="resetQuiz" class="retry-btn">Try Again</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { auth, db } from '@/firebase'; // Ensure db is imported from your firebase config
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth'; // Import onAuthStateChanged
 
+const router = useRouter();
+
+// User state (assuming it's handled globally or within an auth composition)
+const user = ref(null); // This will hold the authenticated user object
+
+// Quiz state
 const questions = [
   {
-    type: 'multiple-choice',
-    question: 'Which line represents 0° latitude?',
-    options: [
-      'Prime Meridian',
-      'Equator',
-      'International Date Line',
-      'Tropic of Cancer'
-    ],
-    answer: 'Equator',
-    explanation: 'The Equator is the line of 0° latitude, dividing the Earth into Northern and Southern Hemispheres.'
+    question: 'Given the local time of city P (0°, 30°W) is 12:00 pm, what is the local time of city Q (10°S, 60°W)?',
+    answer: '10:00 am'
   },
   {
-    type: 'multiple-choice',
-    question: 'What is the maximum value for longitude?',
-    options: [
-      '90°',
-      '180°',
-      '360°',
-      '45°'
-    ],
-    answer: '180°',
-    explanation: 'Longitude ranges from 0° at the Prime Meridian to 180° East and West.'
+    question: 'Given the local time of city P (0°, 30°W) is 12:00 pm, what is the local time of city R (24°N, 10°W)?',
+    answer: '2:00 pm'
   },
   {
-    type: 'map-click',
-    question: 'Click on the location that represents 0° latitude, 0° longitude',
-    answer: { x: 50, y: 50 }, // Center of the map
-    explanation: 'The point where the Equator (0° latitude) and Prime Meridian (0° longitude) intersect is off the west coast of Africa in the Atlantic Ocean.'
+    question: 'Local time of city S (33°S, 20°E) when P (0°, 30°W) is 12:00 pm?',
+    answer: '2:00 pm'
   },
   {
-    type: 'multiple-choice',
-    question: 'Which statement about latitude is correct?',
-    options: [
-      'Lines of latitude are all the same length',
-      'Latitude measures east-west position',
-      'The North Pole is at 90°N latitude',
-      'Latitude lines converge at the poles'
-    ],
-    answer: 'The North Pole is at 90°N latitude',
-    explanation: 'The North Pole is indeed at 90°N latitude. Latitude measures north-south position, and lines of latitude are not all the same length (they get smaller toward the poles).'
+    question: 'Local time of city T (81°N, 81°W) when P is 12:00 pm?',
+    answer: '6:36 am'
   },
   {
-    type: 'map-click',
-    question: 'Click on the approximate location of 30°N latitude, 90°W longitude',
-    answer: { x: 25, y: 33.33 }, // Approximate position for New Orleans
-    explanation: '30°N, 90°W is near New Orleans, Louisiana. This demonstrates how to estimate positions based on coordinate values.'
+    question: 'Jet from X (42°S, 150°E) to Y (8°N, 150°E), speed = 600 knots. Find local time at Z (10°S, 60°E) when jet lands.',
+    answer: '2:00 pm'
+  },
+  {
+    question: 'Airport C position from A(60°N,5°E) → B(60°N,17°E) then 600 nm North?',
+    answer: '70°N, 17°E'
+  },
+  {
+    question: 'Distance in nautical miles between A and B?',
+    answer: '600 nm'
+  },
+  {
+    question: 'Total flight time if speed is 300 knots?',
+    answer: '2 hours'
+  },
+  {
+    question: 'Arrival time at C if departure from A at 9:20am?',
+    answer: '11:20 am'
+  },
+  {
+    question: 'Final position (Q, R, S) after flying 1800 nm East, South, then West from P(0°, 40°W)?',
+    answer: 'Q: 0°, 10°E; R: 30°S, 10°E; S: 30°S, 50°W'
+  },
+  {
+    question: 'Average speed for 16hr total flight?',
+    answer: '337.5 knots'
+  },
+  {
+    question: 'Time taken from R to S if it is 2 hrs shorter than P to Q to R?',
+    answer: '7 hrs'
+  },
+  {
+    question: 'Shortest distance between M(45°N, 38°E) and N(45°N, 142°W)?',
+    answer: '3720 nm'
+  },
+  {
+    question: 'Plane from P(10°S, 62°E) due north 2 hrs @800 km/h. New position?',
+    answer: '4.2°S, 62°E'
+  },
+  {
+    question: 'Distance in nautical miles to 12°W westwards at same speed?',
+    answer: '1350 nm'
+  },
+  {
+    question: 'Time taken for that distance?',
+    answer: '5 hrs'
+  },
+  {
+    question: 'Local time at Q when left P at 1300 hrs?',
+    answer: '11:12 am'
+  },
+  {
+    question: 'Speed from A(60°N, 130°W) to B(60°N, 47°E), 1700 hrs arrival, left 1300 hrs?',
+    answer: '660 knots'
+  },
+  {
+    question: 'Time taken by S (West) to C(60°N, 133°N) @ 600knots?',
+    answer: '2.2 hrs'
+  },
+  {
+    question: 'Time taken by T (North) to C @ 600knots?',
+    answer: '2 hrs'
+  },
+  {
+    question: 'Local time at B if local time at D (23°N, 50°W) is 10:00am?',
+    answer: '6:12 pm'
   }
 ];
 
-const currentQuestionIndex = ref(0);
-const selectedAnswer = ref(null);
-const selectedCoordinates = ref(null);
-const showFeedback = ref(false);
-const isAnswerCorrect = ref(false);
-const userAnswers = ref([]);
-const score = ref(0);
+const userAnswers = ref(Array(questions.length).fill(''));
 const quizCompleted = ref(false);
-const mapDisplay = ref(null);
+const score = computed(() => {
+  return questions.reduce((acc, q, i) => {
+    return acc + (isCorrect(i) ? 1 : 0);
+  }, 0);
+});
 
-const currentQuestion = computed(() => questions[currentQuestionIndex.value]);
-const isLastQuestion = computed(() => currentQuestionIndex.value === questions.length - 1);
-const progressPercentage = computed(() => ((currentQuestionIndex.value + 1) / questions.length) * 100);
+const lastQuizResult = ref(null); // To store the last quiz result
 
-const selectAnswer = (answer) => {
-  if (!showFeedback.value) {
-    selectedAnswer.value = answer;
+// Auth state listener
+let unsubscribe = null;
+
+// Get user role from Firestore (if needed, otherwise remove)
+const getUserRole = async (uid) => {
+  try {
+    const docRef = doc(db, "users", uid);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data().role : 'student';
+  } catch (err) {
+    console.error("Error getting user role:", err);
+    return 'student';
   }
 };
 
-const handleMapClick = (event) => {
-  if (showFeedback.value) return;
-  
-  const rect = mapDisplay.value.getBoundingClientRect();
-  const x = ((event.clientX - rect.left) / rect.width) * 100;
-  const y = ((event.clientY - rect.top) / rect.height) * 100;
-  
-  selectedCoordinates.value = { x, y };
+// Initialize auth state listener
+const initAuth = () => {
+  unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+      user.value = firebaseUser;
+      const userRole = await getUserRole(firebaseUser.uid);
+      
+      // Set localStorage for router guard (if used)
+      localStorage.setItem('user', JSON.stringify({
+        uid: firebaseUser.uid,
+        email: firebaseUser.email
+      }));
+      localStorage.setItem('role', userRole);
+
+      // Load last quiz result when user logs in
+      await loadLastQuizResult();
+
+    } else {
+      user.value = null;
+      localStorage.removeItem('user');
+      localStorage.removeItem('role');
+      lastQuizResult.value = null; // Clear last result on logout
+      // Redirect to login or home if not authenticated
+      router.push('/login'); // Example redirection
+    }
+  });
 };
 
-const checkAnswer = () => {
-  showFeedback.value = true;
-  
-  if (currentQuestion.value.type === 'multiple-choice') {
-    isAnswerCorrect.value = selectedAnswer.value === currentQuestion.value.answer;
-  } else {
-    // For map clicks, allow some margin of error
-    const xDiff = Math.abs(selectedCoordinates.value.x - currentQuestion.value.answer.x);
-    const yDiff = Math.abs(selectedCoordinates.value.y - currentQuestion.value.answer.y);
-    isAnswerCorrect.value = xDiff < 10 && yDiff < 10;
+// Check if user is already authenticated on component mount
+onMounted(() => {
+  initAuth();
+});
+
+// Cleanup on unmount
+onUnmounted(() => {
+  if (unsubscribe) {
+    unsubscribe();
   }
-  
-  userAnswers.value.push(
-    currentQuestion.value.type === 'multiple-choice' 
-      ? selectedAnswer.value 
-      : selectedCoordinates.value
-  );
-  
-  if (isAnswerCorrect.value) {
-    score.value++;
-  }
+});
+
+// Quiz Methods
+const isCorrect = (index) => {
+  const user = userAnswers.value[index]?.trim().toLowerCase();
+  const correct = questions[index].answer.trim().toLowerCase();
+  return user === correct;
 };
 
-const nextQuestion = () => {
-  showFeedback.value = false;
-  selectedAnswer.value = null;
-  selectedCoordinates.value = null;
-  
-  if (isLastQuestion.value) {
-    quizCompleted.value = true;
-  } else {
-    currentQuestionIndex.value++;
+const submitQuiz = async () => {
+  quizCompleted.value = true;
+  if (user.value?.uid) {
+    const result = {
+      uid: user.value.uid,
+      name: user.value.displayName || user.value.email,
+      answers: userAnswers.value,
+      score: score.value,
+      total: questions.length,
+      timestamp: serverTimestamp(),
+    };
+    await setDoc(doc(db, 'geo_quiz_results', user.value.uid), result);
+    await loadLastQuizResult(); // Reload the last result after submitting
   }
 };
 
 const resetQuiz = () => {
-  currentQuestionIndex.value = 0;
-  selectedAnswer.value = null;
-  selectedCoordinates.value = null;
-  showFeedback.value = false;
-  userAnswers.value = [];
-  score.value = 0;
+  userAnswers.value = Array(questions.length).fill('');
   quizCompleted.value = false;
 };
 
-const formatMapCoordinates = (coords) => {
-  const lat = 90 - coords.y * 1.8; // Convert % to degrees (0-180)
-  const lng = coords.x * 3.6 - 180; // Convert % to degrees (0-360)
-  
-  const latDir = lat >= 0 ? 'N' : 'S';
-  const lngDir = lng >= 0 ? 'E' : 'W';
-  
-  return `${Math.abs(lat.toFixed(1))}° ${latDir}, ${Math.abs(lng.toFixed(1))}° ${lngDir}`;
-};
-
-const formatUserAnswer = (answer, type) => {
-  if (type === 'map-click') {
-    return formatMapCoordinates(answer);
+const loadLastQuizResult = async () => {
+  if (user.value?.uid) {
+    try {
+      const docRef = doc(db, 'geo_quiz_results', user.value.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        lastQuizResult.value = docSnap.data();
+      } else {
+        lastQuizResult.value = null;
+      }
+    } catch (error) {
+      console.error("Error loading last quiz result:", error);
+      lastQuizResult.value = null;
+    }
   }
-  return answer;
 };
 </script>
 
 <style scoped>
-.quizzes-container {
-  padding: 20px;
-  max-width: 800px;
-  margin: 0 auto;
+/* Base styles for the entire quiz container */
+.geo-quiz-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2.5rem; /* Increased padding */
+  background: #ffffff; /* White background */
+  border-radius: 16px; /* Slightly more rounded corners */
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08); /* Softer, more spread out shadow */
+  font-family: 'Inter', sans-serif; /* Modern, clean font */
+  color: #333333; /* Darker text for better readability */
 }
 
-h1 {
-  color: #2d3748;
-  margin-bottom: 20px;
-  text-align: center;
+/* Header section styles */
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem; /* Increased bottom margin */
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eeeeee; /* Subtle separator */
 }
 
+.quiz-header h1 {
+  font-size: 2.2rem; /* Slightly larger heading */
+  color: #2c3e50; /* Darker, more professional blue-grey */
+  margin: 0;
+  font-weight: 700; /* Bolder font */
+}
+
+/* Quiz Section (questions) */
 .quiz-section {
-  background-color: #f8fafc;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem; /* Spacing between question blocks */
+}
+
+.question-block {
+  padding: 2rem; /* Increased padding */
+  background: #fdfdfd; /* Very light background */
+  border-radius: 12px; /* Nicely rounded */
+  border: 1px solid #e0e0e0; /* Subtle border */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05); /* Very light shadow */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.question-block:hover {
+  transform: translateY(-3px); /* Gentle lift on hover */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.question-block h3 {
+  margin-top: 0;
+  margin-bottom: 1.2rem; /* More space below heading */
+  color: #34495e; /* Darker heading color */
+  font-size: 1.25rem; /* Slightly larger question text */
+  font-weight: 600;
+}
+
+textarea {
+  width: 100%;
+  padding: 1rem 1.2rem; /* More horizontal padding */
+  border: 1px solid #cccccc; /* Softer border */
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  font-size: 1.05rem; /* Slightly larger text in textarea */
+  resize: vertical;
+  min-height: 120px; /* Taller textarea */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); /* Inner shadow for depth */
 }
 
-.quiz-progress {
-  margin-bottom: 20px;
-  text-align: center;
-  color: #4a5568;
+textarea:focus {
+  outline: none;
+  border-color: #3498db; /* Blue focus color */
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.2); /* Blue glow */
 }
 
-.progress-bar {
-  height: 8px;
-  background-color: #e2e8f0;
-  border-radius: 4px;
-  margin-top: 8px;
-  overflow: hidden;
-}
-
-.progress {
-  height: 100%;
-  background-color: #3182ce;
-  transition: width 0.3s;
-}
-
-.question-container {
-  margin-top: 20px;
-}
-
-h3 {
-  color: #2d3748;
-  margin-bottom: 20px;
-}
-
-.options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.options button {
-  padding: 12px;
-  background-color: white;
-  border: 1px solid #cbd5e0;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
-}
-
-.options button:hover {
-  background-color: #ebf8ff;
-  border-color: #90cdf4;
-}
-
-.options button.selected {
-  background-color: #bee3f8;
-  border-color: #63b3ed;
-}
-
-.options button.correct {
-  background-color: #c6f6d5;
-  border-color: #68d391;
-}
-
-.options button.incorrect {
-  background-color: #fed7d7;
-  border-color: #fc8181;
-}
-
-.map-quiz {
-  margin-bottom: 20px;
-}
-
-.map-display {
-  position: relative;
-  width: 100%;
-  height: 300px;
-  background-color: #bee3f8;
-  border: 1px solid #90cdf4;
-  border-radius: 6px;
-  cursor: crosshair;
-  overflow: hidden;
-}
-
-.grid-lines {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-}
-
-.equator {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background-color: #f56565;
-}
-
-.prime-meridian {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background-color: #4299e1;
-}
-
-.selected-point, .correct-point {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.selected-point {
-  background-color: #2b6cb0;
-  border: 2px solid #ebf8ff;
-}
-
-.correct-point {
-  background-color: #38a169;
-  border: 2px solid #c6f6d5;
-}
-
-.coordinates-display {
-  margin-top: 10px;
-  font-family: monospace;
-}
-
-.feedback {
-  margin: 20px 0;
-  padding: 15px;
-  border-radius: 6px;
-}
-
-.correct-feedback {
-  color: #38a169;
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
-.incorrect-feedback {
-  color: #e53e3e;
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
-.explanation {
-  margin-top: 10px;
-  color: #4a5568;
-}
-
-.submit-btn, .next-btn, .retry-btn {
-  background-color: #3182ce;
-  color: white;
+.submit-btn, .retry-btn {
+  width: auto; /* Allow button to size to content */
+  align-self: flex-end; /* Align to the right */
+  padding: 1.1rem 2.5rem; /* Larger, more prominent buttons */
+  font-size: 1.1rem; /* Larger font */
+  font-weight: 700; /* Bolder text */
   border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
+  border-radius: 10px; /* More rounded */
   cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-  display: block;
-  margin: 20px auto 0;
+  transition: all 0.3s ease;
+  margin-top: 2rem; /* More space above buttons */
 }
 
-.submit-btn:hover, .next-btn:hover, .retry-btn:hover {
-  background-color: #2c5282;
+.submit-btn {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); /* Blue gradient */
+  color: white;
+  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.25);
 }
 
+.submit-btn:hover {
+  transform: translateY(-3px); /* More pronounced lift */
+  box-shadow: 0 10px 20px rgba(52, 152, 219, 0.4);
+}
+
+.retry-btn {
+  background: #f1f3f5; /* Light grey */
+  color: #34495e; /* Dark text */
+  border: 1px solid #dcdcdc; /* Subtle border */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.retry-btn:hover {
+  background: #e2e6ea; /* Slightly darker grey */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Results Section */
 .results-section {
-  background-color: #f8fafc;
-  padding: 30px;
-  border-radius: 8px;
+  padding: 1rem; /* Slightly less padding than whole container */
+}
+
+.results-section h2 {
+  font-size: 2rem;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
   text-align: center;
 }
 
-.score {
-  font-size: 1.5rem;
-  margin: 20px 0;
+.score-display {
+  font-size: 1.5rem; /* Larger score */
+  font-weight: 700;
+  margin-bottom: 2.5rem;
+  color: #2c3e50;
+  text-align: center;
+  background-color: #ecf0f1; /* Light grey background for score */
+  padding: 1rem 2rem;
+  border-radius: 10px;
+  display: inline-block; /* Make it fit content */
+  margin-left: auto;
+  margin-right: auto;
+  display: block; /* Center the block */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.percentage {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #3182ce;
-  margin-bottom: 30px;
+.result-block {
+  margin-bottom: 2rem; /* More space between result blocks */
+  padding: 2rem;
+  background: #fdfdfd;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
-.breakdown {
-  text-align: left;
-  margin-top: 30px;
+.result-block h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #34495e;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
-.question-review {
-  margin-bottom: 20px;
-  padding: 15px;
-  background-color: white;
-  border-radius: 6px;
+.result-block p {
+  margin: 0.6rem 0; /* Slightly more vertical spacing for text */
+  font-size: 1.05rem;
 }
 
-.correct-answer {
-  color: #38a169;
+.result-block p strong {
+  color: #555555; /* Slightly darker strong text */
 }
 
-.wrong-answer {
-  color: #e53e3e;
+.correct {
+  color: #27ae60; /* Flat green */
+  font-weight: 700;
+  font-size: 1.1rem;
 }
 
-@media (max-width: 600px) {
-  .options {
-    grid-template-columns: 1fr;
+.wrong {
+  color: #e74c3c; /* Flat red */
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* Last Quiz Performance Section */
+.last-quiz-section {
+  margin-top: 3rem;
+  padding: 2.5rem;
+  background: #eaf2f8; /* Light blue background for last results */
+  border-radius: 16px;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.05); /* Inner shadow for depth */
+  border: 1px dashed #cccccc; /* Dashed border */
+}
+
+.last-quiz-section h3 {
+  font-size: 1.8rem;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  border-bottom: 1px solid #dcdcdc;
+  padding-bottom: 1rem;
+}
+
+.last-quiz-section p {
+  font-size: 1.1rem;
+  margin-bottom: 0.8rem;
+  color: #444444;
+}
+
+.last-quiz-answers {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.last-result-block {
+  padding: 1.5rem;
+  background: #ffffff; /* White background for individual last results */
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.last-result-block p {
+  margin: 0.4rem 0;
+  font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .geo-quiz-container {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .quiz-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .quiz-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .logout-btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .question-block {
+    padding: 1.5rem;
+  }
+
+  .question-block h3 {
+    font-size: 1.1rem;
+  }
+
+  textarea {
+    min-height: 90px;
+  }
+
+  .submit-btn, .retry-btn {
+    padding: 0.9rem 1.8rem;
+    font-size: 1rem;
+  }
+
+  .results-section h2 {
+    font-size: 1.8rem;
+  }
+
+  .score-display {
+    font-size: 1.3rem;
+  }
+
+  .result-block {
+    padding: 1.2rem;
+  }
+
+  .result-block h4 {
+    font-size: 1.1rem;
+  }
+
+  .last-quiz-section {
+    padding: 1.5rem;
+  }
+
+  .last-quiz-section h3 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .geo-quiz-container {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+  
+  .quiz-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .question-block {
+    padding: 1rem;
+  }
+  
+  .question-block h3 {
+    font-size: 1rem;
+  }
+
+  textarea {
+    min-height: 70px;
+    font-size: 0.9rem;
+  }
+
+  .submit-btn, .retry-btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .results-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .score-display {
+    font-size: 1.1rem;
+    padding: 0.8rem 1.5rem;
+  }
+
+  .result-block {
+    padding: 1rem;
+  }
+
+  .last-quiz-section {
+    padding: 1rem;
+  }
+
+  .last-quiz-section h3 {
+    font-size: 1.3rem;
+  }
+
+  .last-result-block {
+    padding: 1rem;
   }
 }
 </style>
