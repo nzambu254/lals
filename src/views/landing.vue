@@ -3,55 +3,20 @@
     <!-- Hero Section -->
     <header class="hero-section">
       <div class="hero-content">
-        <h1 class="hero-title">🌍 Longitude and latitudes learning System</h1>
+        <h1 class="hero-title">
+          <span class="emoji">🌍</span> Longitude & Latitude Learning System
+        </h1>
         <p class="subtitle">Master Geographic Coordinates with Interactive Learning</p>
         <div class="cta-buttons">
-          <button @click="navigateToLogin" class="cta-btn primary">Login</button>
-          <button @click="navigateToLogin" class="cta-btn secondary">Get Started</button>
+          <button @click="navigateToLogin" class="cta-btn primary-btn">Login</button>
+          <button @click="navigateToLogin" class="cta-btn secondary-btn">Get Started</button>
         </div>
       </div>
     </header>
 
-    <!-- Features Section -->
-    <section class="features-section">
-      <h2 class="section-title">Key Features</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">🌎</div>
-          <h3>Interactive Globe</h3>
-          <p>Explore a 3D globe with real-time coordinate visualization and measurement tools.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🧭</div>
-          <h3>Precision Tools</h3>
-          <p>Calculate distances, bearings, and areas with professional-grade accuracy.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📊</div>
-          <h3>Data Visualization</h3>
-          <p>Import and visualize your own geographic data sets on our platform.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- About Section -->
-    <section class="about-section">
-      <div class="about-content">
-        <h2>About GeoLearn</h2>
-        <p>
-          GeoLearn revolutionizes how you learn longitude and latitude through an immersive platform featuring 3D globes,
-          real-time calculations, and AI-powered guidance.
-        </p>
-        <p>
-          Our system helps students, educators, and professionals master geographic coordinates with interactive tools and
-          comprehensive learning resources.
-        </p>
-      </div>
-    </section>
-
     <!-- Footer -->
     <footer class="page-footer">
-      <p>© 2025 GeoLearn System. All rights reserved.</p>
+      <p>&copy; 2025 GeoLearn System. All rights reserved.</p>
     </footer>
   </div>
 </template>
@@ -67,178 +32,179 @@ const navigateToLogin = () => {
 </script>
 
 <style scoped>
+/* Base Styles */
 .landing-page {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #2c3e50;
-  background-color: #fefefe;
+  font-family: 'Inter', sans-serif; /* A clean, modern font */
+  color: #333333; /* Soft dark grey for text */
+  background-color: #f9f9f9; /* Very light grey background */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 /* Hero Section */
 .hero-section {
-  background: linear-gradient(135deg, #1e3a8a, #2563eb);
-  color: white;
-  padding: 5rem 1rem;
+  background: linear-gradient(145deg, #e0efff 0%, #d0e7ff 100%); /* Soft, light blue gradient */
+  color: #2c3e50; /* Darker blue for text on light background */
+  padding: 6rem 1.5rem; /* More vertical padding */
   text-align: center;
-  min-height: 75vh;
+  flex-grow: 1; /* Occupy remaining vertical space */
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden; /* For subtle background elements */
 }
 
+/* Subtle background circles (decorative) */
+.hero-section::before,
+.hero-section::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.3); /* Translucent white circles */
+  border-radius: 50%;
+  z-index: 0;
+  filter: blur(50px); /* Soft blur effect */
+}
+
+.hero-section::before {
+  width: 150px;
+  height: 150px;
+  top: 10%;
+  left: 10%;
+}
+
+.hero-section::after {
+  width: 200px;
+  height: 200px;
+  bottom: 5%;
+  right: 8%;
+}
+
+
 .hero-content {
-  max-width: 800px;
+  max-width: 850px; /* Slightly wider content area */
   margin: 0 auto;
+  position: relative; /* Bring content above pseudo-elements */
+  z-index: 1;
 }
 
 .hero-title {
-  font-size: 3.2rem;
-  font-weight: 800;
-  margin-bottom: 1rem;
+  font-size: 3.8rem; /* Larger, more impactful title */
+  font-weight: 800; /* Extra bold */
+  margin-bottom: 1.2rem;
+  line-height: 1.2;
+  color: #1a2c3e; /* Very dark blue for strong contrast */
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.05); /* Subtle text shadow */
+}
+
+.hero-title .emoji {
+  font-size: 0.9em; /* Adjust emoji size relative to text */
+  vertical-align: middle;
+  margin-right: 10px;
 }
 
 .subtitle {
-  font-size: 1.4rem;
-  margin-bottom: 2rem;
-  opacity: 0.95;
+  font-size: 1.6rem; /* Clear and inviting subtitle */
+  margin-bottom: 2.5rem;
+  color: #4a6572; /* Muted blue-grey */
+  font-weight: 400;
 }
 
 .cta-buttons {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem; /* More space between buttons */
   justify-content: center;
   flex-wrap: wrap;
-  margin-top: 2rem;
+  margin-top: 3rem;
 }
 
 .cta-btn {
-  padding: 0.85rem 2rem;
-  border-radius: 9999px;
-  font-weight: bold;
+  padding: 1rem 2.5rem; /* Generous padding */
+  border-radius: 30px; /* Pill-shaped buttons */
+  font-weight: 600; /* Semi-bold */
   transition: all 0.3s ease;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.1rem; /* Slightly larger font */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle initial shadow */
 }
 
-.cta-btn.primary {
-  background-color: #ffffff;
-  color: #1e3a8a;
-  border: 2px solid transparent;
-}
-
-.cta-btn.primary:hover {
-  background-color: #f3f4f6;
-}
-
-.cta-btn.secondary {
-  background-color: transparent;
+.primary-btn {
+  background-color: #007bff; /* Vibrant blue */
   color: white;
-  border: 2px solid white;
 }
 
-.cta-btn.secondary:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.primary-btn:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+  transform: translateY(-3px); /* Lift effect */
+  box-shadow: 0 8px 15px rgba(0, 123, 255, 0.3);
 }
 
-/* Features Section */
-.features-section {
-  padding: 4rem 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  text-align: center;
+.secondary-btn {
+  background-color: #f0f4f8; /* Very light grey */
+  color: #007bff; /* Blue text */
+  border: 1px solid #cce0ff; /* Light blue border */
 }
 
-.section-title {
-  font-size: 2.2rem;
-  margin-bottom: 3rem;
-  color: #1e3a8a;
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-}
-
-.feature-card {
-  background-color: white;
-  border-radius: 10px;
-  padding: 2rem;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease;
-}
-
-.feature-card:hover {
-  transform: translateY(-6px);
-}
-
-.feature-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-.feature-card h3 {
-  font-size: 1.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.feature-card p {
-  color: #555;
-  line-height: 1.6;
-}
-
-/* About Section */
-.about-section {
-  background-color: #f9fafb;
-  padding: 4rem 1rem;
-}
-
-.about-content {
-  max-width: 850px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.about-section h2 {
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
-  color: #1e3a8a;
-}
-
-.about-section p {
-  margin-bottom: 1rem;
-  line-height: 1.7;
-  font-size: 1.05rem;
-  color: #444;
+.secondary-btn:hover {
+  background-color: #e2e8f0; /* Slightly darker light grey on hover */
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
 
 /* Footer */
 .page-footer {
-  background-color: #1e3a8a;
-  color: white;
+  background-color: #e0efff; /* Matches hero's lighter tone */
+  color: #4a6572; /* Muted text color */
   text-align: center;
-  padding: 1.25rem;
+  padding: 1.5rem; /* More padding */
   font-size: 0.95rem;
+  border-top: 1px solid #cce0ff; /* Subtle top border */
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .hero-title {
-    font-size: 2.3rem;
+    font-size: 3rem;
   }
-
   .subtitle {
-    font-size: 1.1rem;
+    font-size: 1.4rem;
   }
+}
 
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 4rem 1rem;
+  }
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  .subtitle {
+    font-size: 1.2rem;
+  }
   .cta-buttons {
     flex-direction: column;
     align-items: center;
+    gap: 1rem;
   }
-
   .cta-btn {
-    width: 80%;
+    width: 90%;
     max-width: 300px;
+    font-size: 1em;
+    padding: 0.8rem 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 3rem 0.8rem;
+  }
+  .hero-title {
+    font-size: 2rem;
+  }
+  .subtitle {
+    font-size: 1rem;
   }
 }
 </style>

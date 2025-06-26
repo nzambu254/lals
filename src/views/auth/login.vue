@@ -4,18 +4,8 @@
       <!-- Header Section -->
       <div class="login-header">
         <div class="logo-section">
-          <div class="logo-icon">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <rect width="40" height="40" rx="12" fill="url(#gradient)"/>
-              <path d="M20 8L28 16L20 24L12 16L20 8Z" fill="white"/>
-              <defs>
-                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-                  <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
+          <!-- Replaced SVG with simple text/emoji for simplicity -->
+          <span class="app-logo">🌍</span>
           <h1>{{ isRegistering ? 'Create Account' : 'Welcome Back' }}</h1>
           <p>{{ isRegistering ? 'Join our platform today' : 'Sign in to your account' }}</p>
         </div>
@@ -23,15 +13,15 @@
 
       <!-- Toggle Buttons -->
       <div class="toggle-buttons">
-        <button 
-          type="button" 
+        <button
+          type="button"
           :class="['toggle-btn', { active: !isRegistering }]"
           @click="switchToLogin"
         >
           Sign In
         </button>
-        <button 
-          type="button" 
+        <button
+          type="button"
           :class="['toggle-btn', { active: isRegistering }]"
           @click="switchToRegister"
         >
@@ -41,25 +31,20 @@
 
       <!-- Error Message -->
       <div v-if="error" class="alert alert-error">
-        <svg class="alert-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-        </svg>
+        <!-- Using a simple SVG icon or could use a Font Awesome icon -->
+        <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.953 2C6.465 2 2 6.48 2 12s4.465 10 9.953 10C17.442 22 22 17.52 22 12S17.442 2 11.953 2zm-.235 15.698L11.758 13.91l-.005.006A.75.75 0 0110.74 13.5l-1.002.576.002-.003.003-.002a.75.75 0 01-.001-.001l-.004.002-1.004-.578a.75.75 0 01-.253-1.002.75.75 0 011.001-.253l.632.365.372-.644A.75.75 0 0110.5 11l.5.866.5-.866a.75.75 0 01.75-.13.75.75 0 01.129.75l-.365.632.644.372a.75.75 0 01.13.75.75.75 0 01-.75.129l-.5-.866-.5.866a.75.75 0 01-1.001.253zM12 7a1 1 0 100 2 1 1 0 000-2z" /></svg>
         {{ error }}
       </div>
 
       <!-- Success Message -->
       <div v-if="resetEmailSent" class="alert alert-success">
-        <svg class="alert-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-        </svg>
+        <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm.997 13.921l-3.25-3.25a.75.75 0 10-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l5.5-5.5a.75.75 0 10-1.06-1.06l-4.44 4.44z" /></svg>
         Password reset email sent. Please check your inbox.
       </div>
 
       <!-- Registration Success Message -->
       <div v-if="registrationSuccess" class="alert alert-success">
-        <svg class="alert-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-        </svg>
+        <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm.997 13.921l-3.25-3.25a.75.75 0 10-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l5.5-5.5a.75.75 0 10-1.06-1.06l-4.44 4.44z" /></svg>
         Account created successfully! Please sign in with your credentials.
       </div>
 
@@ -70,12 +55,12 @@
             Email Address
           </label>
           <div class="input-wrapper">
-            <input 
-              type="email" 
-              id="email" 
-              v-model="formData.email" 
-              required 
-              class="form-input" 
+            <input
+              type="email"
+              id="email"
+              v-model="formData.email"
+              required
+              class="form-input"
               placeholder="Enter your email"
             >
           </div>
@@ -86,12 +71,12 @@
             Password
           </label>
           <div class="input-wrapper">
-            <input 
-              :type="showPassword ? 'text' : 'password'" 
-              id="password" 
-              v-model="formData.password" 
-              required 
-              class="form-input" 
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              id="password"
+              v-model="formData.password"
+              required
+              class="form-input"
               placeholder="Enter your password"
             >
             <button type="button" class="password-toggle" @click="showPassword = !showPassword">
@@ -120,12 +105,12 @@
             Full Name
           </label>
           <div class="input-wrapper">
-            <input 
-              type="text" 
-              id="reg-name" 
-              v-model="registerData.name" 
-              required 
-              class="form-input" 
+            <input
+              type="text"
+              id="reg-name"
+              v-model="registerData.name"
+              required
+              class="form-input"
               placeholder="Enter your full name"
             >
           </div>
@@ -136,12 +121,12 @@
             Email Address
           </label>
           <div class="input-wrapper">
-            <input 
-              type="email" 
-              id="reg-email" 
-              v-model="registerData.email" 
-              required 
-              class="form-input" 
+            <input
+              type="email"
+              id="reg-email"
+              v-model="registerData.email"
+              required
+              class="form-input"
               placeholder="Enter your email"
             >
           </div>
@@ -152,10 +137,10 @@
             Account Type
           </label>
           <div class="input-wrapper">
-            <select 
-              id="reg-role" 
-              v-model="registerData.role" 
-              required 
+            <select
+              id="reg-role"
+              v-model="registerData.role"
+              required
               class="form-select"
             >
               <option value="">Select account type</option>
@@ -170,12 +155,12 @@
             Password
           </label>
           <div class="input-wrapper">
-            <input 
-              :type="showRegPassword ? 'text' : 'password'" 
-              id="reg-password" 
-              v-model="registerData.password" 
-              required 
-              class="form-input" 
+            <input
+              :type="showRegPassword ? 'text' : 'password'"
+              id="reg-password"
+              v-model="registerData.password"
+              required
+              class="form-input"
               placeholder="Create a password"
               minlength="6"
             >
@@ -192,12 +177,12 @@
             Confirm Password
           </label>
           <div class="input-wrapper">
-            <input 
-              :type="showConfirmPassword ? 'text' : 'password'" 
-              id="reg-confirm-password" 
-              v-model="registerData.confirmPassword" 
-              required 
-              class="form-input" 
+            <input
+              :type="showConfirmPassword ? 'text' : 'password'"
+              id="reg-confirm-password"
+              v-model="registerData.confirmPassword"
+              required
+              class="form-input"
               placeholder="Confirm your password"
               :class="{ 'error': passwordMismatch }"
             >
@@ -224,9 +209,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { auth } from '@/firebase';
-import { 
-  onAuthStateChanged, 
-  signOut, 
+import {
+  onAuthStateChanged,
+  signOut,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail
@@ -269,9 +254,9 @@ let unsubscribe = null;
 
 // Computed properties
 const passwordMismatch = computed(() => {
-  return registerData.value.password && 
-         registerData.value.confirmPassword && 
-         registerData.value.password !== registerData.value.confirmPassword;
+  return registerData.value.password &&
+           registerData.value.confirmPassword &&
+           registerData.value.password !== registerData.value.confirmPassword;
 });
 
 // Get user role from Firestore
@@ -301,13 +286,19 @@ const initAuth = () => {
     if (firebaseUser) {
       user.value = firebaseUser;
       const userRole = await getUserRole(firebaseUser.uid);
-      
+
       // Set localStorage for router guard
       localStorage.setItem('user', JSON.stringify({
         uid: firebaseUser.uid,
         email: firebaseUser.email
       }));
       localStorage.setItem('role', userRole);
+
+      // If user is already logged in and tries to access login page, redirect them
+      if (router.currentRoute.value.path === '/login') {
+        redirectToDashboard(userRole);
+      }
+
     } else {
       user.value = null;
       localStorage.removeItem('user');
@@ -348,19 +339,19 @@ const handleLogin = async () => {
   registrationSuccess.value = false;
   loading.value = true;
   error.value = null;
-  
+
   try {
     const userCredential = await signInWithEmailAndPassword(
-      auth, 
-      formData.value.email, 
+      auth,
+      formData.value.email,
       formData.value.password
     );
-    
+
     user.value = userCredential.user;
-    
+
     // Get user role from database
     const userRole = await getUserRole(user.value.uid);
-    
+
     // Set localStorage for router guard
     localStorage.setItem('user', JSON.stringify({
       uid: user.value.uid,
@@ -370,7 +361,7 @@ const handleLogin = async () => {
 
     // Clear form data
     formData.value = { email: '', password: '' };
-    
+
     // Redirect based on role
     redirectToDashboard(userRole);
   } catch (err) {
@@ -401,7 +392,7 @@ const handleRegister = async () => {
       registerData.value.email,
       registerData.value.password
     );
-    
+
     // Save additional user data to Firestore
     await setDoc(doc(db, "users", userCredential.user.uid), {
       name: registerData.value.name,
@@ -409,10 +400,10 @@ const handleRegister = async () => {
       role: registerData.value.role,
       createdAt: new Date()
     });
-    
+
     // Store the registered email for convenience
     const registeredEmail = registerData.value.email;
-    
+
     // Clear form
     registerData.value = {
       name: '',
@@ -428,10 +419,10 @@ const handleRegister = async () => {
     // Show success message and switch to login
     registrationSuccess.value = true;
     error.value = null;
-    
+
     // Sign out the user so they need to login manually
     await signOut(auth);
-    
+
     // Switch to login form after a short delay
     setTimeout(() => {
       isRegistering.value = false;
@@ -456,8 +447,8 @@ const resetPassword = async () => {
   }
 
   // Special handling for admin account
-  if (formData.value.email === 'alvn4407@gmail.com') {
-    error.value = 'Please contact the administrator for password reset.';
+  if (formData.value.email === 'alvn4407@gmail.com') { // Assuming this is a hardcoded admin email
+    error.value = 'Please contact the administrator for password reset of this specific account.';
     return;
   }
 
@@ -473,33 +464,37 @@ const resetPassword = async () => {
 </script>
 
 <style scoped>
+/* Base Styles */
 .login-wrapper {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(145deg, #e0efff 0%, #d0e7ff 100%); /* Light blue gradient from landing page */
   padding: 20px;
+  font-family: 'Inter', sans-serif;
+  color: #333333;
 }
 
 .login-container {
   background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border-radius: 16px; /* Slightly more rounded */
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08); /* Softer shadow */
   padding: 40px;
   width: 100%;
   max-width: 450px;
-  animation: slideUp 0.5s ease-out;
+  animation: fadeInScale 0.5s ease-out; /* Smooth entrance animation */
+  border: 1px solid #e0efff; /* Subtle border */
 }
 
-@keyframes slideUp {
+@keyframes fadeInScale {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -512,81 +507,89 @@ const resetPassword = async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
+  gap: 10px; /* Reduced gap */
 }
 
-.logo-icon {
-  margin-bottom: 10px;
+.app-logo {
+  font-size: 3em; /* Larger emoji logo */
+  margin-bottom: 5px;
 }
 
 .login-header h1 {
-  font-size: 28px;
+  font-size: 2.2em; /* Slightly smaller for balance */
   font-weight: 700;
-  color: #1a202c;
+  color: #2c3e50; /* Darker text */
   margin: 0;
 }
 
 .login-header p {
-  color: #718096;
-  font-size: 16px;
-  margin: 0;
+  color: #6a7d8e; /* Muted subtitle color */
+  font-size: 1.1em;
+  margin: 5px 0 0;
 }
 
 .toggle-buttons {
   display: flex;
-  background: #f7fafc;
+  background: #f0f4f8; /* Very light grey */
   border-radius: 12px;
-  padding: 4px;
+  padding: 6px; /* Slightly more padding */
   margin-bottom: 30px;
-  gap: 4px;
+  gap: 6px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); /* Subtle inner shadow */
 }
 
 .toggle-btn {
   flex: 1;
   padding: 12px 20px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px; /* More rounded */
   background: transparent;
-  color: #718096;
+  color: #6a7d8e; /* Muted text color */
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-size: 1.05em;
 }
 
 .toggle-btn.active {
   background: white;
-  color: #667eea;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+  color: #007bff; /* Vibrant blue */
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15); /* Softer blue shadow */
+  font-weight: 600;
 }
 
 .toggle-btn:hover:not(.active) {
   color: #4a5568;
+  background-color: #e8ecef; /* Subtle hover background */
 }
 
 .alert {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
-  border-radius: 12px;
+  padding: 15px; /* Slightly less padding */
+  border-radius: 10px; /* More rounded alerts */
   margin-bottom: 20px;
   font-weight: 500;
-}
-
-.alert-error {
-  background: #fed7d7;
-  color: #c53030;
-  border: 1px solid #feb2b2;
-}
-
-.alert-success {
-  background: #c6f6d5;
-  color: #2f855a;
-  border: 1px solid #9ae6b4;
+  font-size: 0.95em;
 }
 
 .alert-icon {
   flex-shrink: 0;
+  width: 22px; /* Slightly larger icons */
+  height: 22px;
+}
+
+.alert-error {
+  background: #ffebeb; /* Very light red */
+  color: #cc0000; /* Darker red */
+  border: 1px solid #ffcccc; /* Light red border */
+}
+
+.alert-success {
+  background: #ebffed; /* Very light green */
+  color: #008000; /* Darker green */
+  border: 1px solid #ccffcc; /* Light green border */
 }
 
 .auth-form {
@@ -598,13 +601,13 @@ const resetPassword = async () => {
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px; /* More space between label and input */
 }
 
 .form-label {
   font-weight: 600;
-  color: #2d3748;
-  font-size: 14px;
+  color: #2c3e50; /* Darker text */
+  font-size: 0.95em;
 }
 
 .input-wrapper {
@@ -616,23 +619,25 @@ const resetPassword = async () => {
 .form-input,
 .form-select {
   width: 100%;
-  padding: 16px;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 16px;
+  padding: 14px; /* Slightly less padding */
+  border: 1px solid #d0dce7; /* Softer border color */
+  border-radius: 10px; /* More rounded */
+  font-size: 1em;
   background: white;
   transition: all 0.3s ease;
+  color: #333;
 }
 
 .form-input:focus,
 .form-select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #007bff; /* Vibrant blue on focus */
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15); /* Softer focus shadow */
 }
 
 .form-input.error {
   border-color: #e53e3e;
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
 }
 
 .form-select {
@@ -647,49 +652,48 @@ const resetPassword = async () => {
 
 .password-toggle {
   position: absolute;
-  right: 16px;
+  right: 12px; /* Adjusted position */
   background: none;
   border: none;
-  color: #667eea;
+  color: #007bff; /* Vibrant blue */
   font-weight: 500;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.9em;
   padding: 4px 8px;
   border-radius: 6px;
   transition: background-color 0.2s ease;
 }
 
 .password-toggle:hover {
-  background: #f7fafc;
+  background: #f0f4f8; /* Light background on hover */
 }
 
-.password-hint {
-  font-size: 12px;
-  color: #718096;
-  margin: 0;
+.password-hint, .error-text {
+  font-size: 0.85em; /* Smaller hint text */
+  color: #7a8c9e; /* Muted color */
+  margin: 5px 0 0;
 }
 
 .error-text {
-  font-size: 12px;
-  color: #e53e3e;
-  margin: 0;
+  color: #e53e3e; /* Standard error red */
+  font-weight: 500;
 }
 
 .form-actions {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 15px; /* Reduced gap */
   margin-top: 10px;
 }
 
 .btn-primary {
   width: 100%;
   padding: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); /* Solid blue gradient */
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 16px;
+  border-radius: 10px; /* More rounded */
+  font-size: 1.1em;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -697,11 +701,12 @@ const resetPassword = async () => {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2); /* Subtle shadow */
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 123, 255, 0.35); /* More pronounced shadow on hover */
 }
 
 .btn-primary:disabled {
@@ -714,8 +719,8 @@ const resetPassword = async () => {
 .loading-spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -731,15 +736,15 @@ const resetPassword = async () => {
 }
 
 .forgot-link {
-  color: #667eea;
+  color: #007bff; /* Vibrant blue */
   text-decoration: none;
   font-weight: 500;
-  font-size: 14px;
-  transition: color 0.3s ease;
+  font-size: 0.9em;
+  transition: color 0.3s ease, text-decoration 0.3s ease;
 }
 
 .forgot-link:hover {
-  color: #5a67d8;
+  color: #0056b3; /* Darker blue on hover */
   text-decoration: underline;
 }
 
@@ -749,16 +754,28 @@ const resetPassword = async () => {
     padding: 30px 20px;
     margin: 10px;
   }
-  
+
   .login-header h1 {
-    font-size: 24px;
+    font-size: 2em;
   }
-  
+
+  .toggle-buttons {
+    flex-direction: column; /* Stack toggle buttons */
+  }
+
+  .toggle-btn {
+    padding: 10px 15px;
+  }
+
   .form-input,
   .form-select,
   .btn-primary {
-    padding: 14px;
-    font-size: 16px;
+    padding: 12px;
+    font-size: 1em;
+  }
+
+  .password-toggle {
+    right: 8px; /* Further adjust for smaller screens */
   }
 }
 </style>
