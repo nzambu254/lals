@@ -17,6 +17,12 @@ import VisualizationModule from '@/views/student/VisualizationModule.vue'
 import DistanceCalculation from '@/views/student/DistanceCalculation.vue'
 import InteractiveQuizzes from '@/views/student/InteractiveQuizzes.vue'
 
+// NEW: Simulation Components
+import IdentifyCoordinatesSimulation from '@/views/Simulations/IdentifyCoordinatesSimulation.vue'
+import GreatCircleMeridianSimulation from '@/views/Simulations/GreatCircleMeridianSimulation.vue'
+import GreatCircleHaversineSimulation from '@/views/Simulations/GreatCircleHaversineSimulation.vue'
+import SmallCircleParallelSimulation from '@/views/Simulations/SmallCircleParallelSimulation.vue'
+
 // Shared Components
 import Login from '@/views/auth/Login.vue'
 import NotFound from '@/views/NotFound.vue'
@@ -126,6 +132,33 @@ const routes = [
     meta: { requiresAuth: true, role: 'student' }
   },
 
+  // NEW: Simulation Task Routes (under a common base for students)
+  {
+    path: '/simulation/101',
+    name: 'IdentifyCoordinatesSimulation',
+    component: IdentifyCoordinatesSimulation,
+    meta: { requiresAuth: true, role: 'student' }
+  },
+  {
+    path: '/simulation/201',
+    name: 'GreatCircleMeridianSimulation',
+    component: GreatCircleMeridianSimulation,
+    meta: { requiresAuth: true, role: 'student' }
+  },
+  {
+    path: '/simulation/203',
+    name: 'GreatCircleHaversineSimulation',
+    component: GreatCircleHaversineSimulation,
+    meta: { requiresAuth: true, role: 'student' }
+  },
+  {
+    path: '/simulation/301',
+    name: 'SmallCircleParallelSimulation',
+    component: SmallCircleParallelSimulation,
+    meta: { requiresAuth: true, role: 'student' }
+  },
+  // Add other simulation routes here following the pattern
+
   // Catch-all route
   {
     path: '/:pathMatch(.*)*',
@@ -144,18 +177,18 @@ router.beforeEach(async (to, from, next) => {
   try {
     // Wait for Firebase auth to initialize
     const currentUser = await getCurrentUser();
-    
+
     if (to.meta.requiresAuth) {
       // Route requires authentication
       if (!currentUser) {
         console.log('No authenticated user, redirecting to login');
         return next('/login');
       }
-      
+
       // Check role-based access
       if (to.meta.role) {
         const userRole = await getUserRole(currentUser.uid);
-        
+
         if (to.meta.role !== userRole) {
           console.log(`Role mismatch. Required: ${to.meta.role}, User: ${userRole}`);
           // Redirect to appropriate dashboard based on user's actual role
@@ -172,7 +205,7 @@ router.beforeEach(async (to, from, next) => {
         return next(redirectPath);
       }
     }
-    
+
     next();
   } catch (error) {
     console.error('Router guard error:', error);
