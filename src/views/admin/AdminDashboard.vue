@@ -1,7 +1,7 @@
 <template>
   <div class="admin-container">
-    <h1 class="page-title">Admin Dashboard</h1>
-    
+    <h1>Welcome Back, {{ adminName || 'Admin' }}!</h1>
+
     <!-- Summary Cards -->
     <div class="dashboard-summary">
       <div class="summary-card">
@@ -10,365 +10,211 @@
         </div>
         <div class="summary-content">
           <h3>Total Users</h3>
-          <p>1,024</p>
+          <p>{{ totalUsersCount }}</p>
         </div>
       </div>
-      
-      <div class="summary-card">
-        <div class="summary-icon content-icon">
-          <span class="icon">📄</span>
-        </div>
-        <div class="summary-content">
-          <h3>Content Items</h3>
-          <p>256</p>
-        </div>
-      </div>
-      
-      <div class="summary-card">
-        <div class="summary-icon training-icon">
-          <span class="icon">🎓</span>
-        </div>
-        <div class="summary-content">
-          <h3>Active Programs</h3>
-          <p>18</p>
-        </div>
-      </div>
-      
+
       <div class="summary-card">
         <div class="summary-icon simulation-icon">
           <span class="icon">🎮</span>
         </div>
         <div class="summary-content">
-          <h3>Simulations</h3>
-          <p>42</p>
+          <h3>Available Simulation Tasks</h3>
+          <p>{{ availableSimulationTasksCount }}</p>
         </div>
       </div>
+      <!-- Other summary cards (Content Items, Active Programs) have been removed based on the request to focus on users and simulations -->
     </div>
-    
-    <!-- Recent Activity -->
-    <div class="dashboard-section">
-      <h2 class="section-title">Recent Activity</h2>
-      <div class="activity-list">
-        <div v-for="activity in recentActivities" :key="activity.id" class="activity-item">
-          <div class="activity-icon">
-            <span class="icon">{{ getActivityIcon(activity.type) }}</span>
-          </div>
-          <div class="activity-details">
-            <p class="activity-message">{{ activity.message }}</p>
-            <p class="activity-time">{{ activity.time }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Quick Actions -->
-    <div class="dashboard-section">
-      <h2 class="section-title">Quick Actions</h2>
-      <div class="quick-actions">
-        <button class="action-btn" @click="navigateTo('/admin/users')">
-          <span class="action-icon">👥</span>
-          <span>Manage Users</span>
-        </button>
-        <button class="action-btn" @click="navigateTo('/admin/content')">
-          <span class="action-icon">📄</span>
-          <span>Create Content</span>
-        </button>
-        <button class="action-btn" @click="navigateTo('/admin/training')">
-          <span class="action-icon">🎓</span>
-          <span>Add Program</span>
-        </button>
-        <button class="action-btn" @click="navigateTo('/admin/assignments')">
-          <span class="action-icon">📋</span>
-          <span>Assignments</span>
-        </button>
-      </div>
-    </div>
+
+    <!-- The "Recent Activity" and "Quick Actions" sections have been removed as requested -->
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { auth, db } from '@/firebase'; // Ensure these are correctly imported
+import { onAuthStateChanged } from 'firebase/auth';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 
-const router = useRouter();
+const adminName = ref('');
+const totalUsersCount = ref(0);
+const availableSimulationTasksCount = ref(4); // Set to 4 as per your instruction
 
-const recentActivities = [
-  { id: 1, type: 'user', message: 'New user "Alex Johnson" registered', time: '10 mins ago' },
-  { id: 2, type: 'content', message: '"Business Fundamentals" content updated', time: '25 mins ago' },
-  { id: 3, type: 'training', message: 'New program "Digital Innovation 101" added', time: '1 hour ago' },
-  { id: 4, type: 'simulation', message: 'Distance calculation simulation completed', time: '2 hours ago' }
-];
+const fetchAdminData = async () => {
+  // 1. Get the current authenticated user
+  const user = await new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      unsubscribe(); // Unsubscribe immediately after getting the user
+      resolve(firebaseUser);
+    });
+  });
 
-const getActivityIcon = (type) => {
-  const icons = {
-    user: '👤',
-    content: '📝',
-    training: '🎓',
-    simulation: '🎮',
-    analytics: '📊'
-  };
-  return icons[type] || '📄';
+  if (user) {
+    // 2. Fetch the admin's name from the 'users' Firestore collection
+    try {
+      const adminDocRef = doc(db, "users", user.uid);
+      const adminDocSnap = await getDoc(adminDocRef);
+      if (adminDocSnap.exists()) {
+        adminName.value = adminDocSnap.data().name || user.displayName || user.email;
+      } else {
+        adminName.value = user.displayName || user.email || 'Admin';
+        console.warn("Admin user document not found in 'users' collection for UID:", user.uid);
+      }
+    } catch (error) {
+      console.error("Error fetching admin name:", error);
+      adminName.value = user.displayName || user.email || 'Admin'; // Fallback name
+    }
+
+    // 3. Fetch total number of users in the system
+    try {
+      const usersCollectionRef = collection(db, 'users');
+      const usersSnapshot = await getDocs(usersCollectionRef);
+      totalUsersCount.value = usersSnapshot.size; // Get the count of documents
+    } catch (error) {
+      console.error("Error fetching total users count:", error);
+      totalUsersCount.value = 'N/A'; // Indicate error
+    }
+  } else {
+    adminName.value = 'Guest';
+    totalUsersCount.value = 'N/A';
+  }
 };
 
-const navigateTo = (route) => {
-  router.push(route);
-};
+onMounted(() => {
+  fetchAdminData();
+});
 </script>
 
 <style scoped>
 .admin-container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0;
+  padding: 30px; /* Increased padding */
+  max-width: 1000px; /* Slightly adjusted max-width */
+  margin: 30px auto; /* Centered with top/bottom margin */
+  background-color: #f8f9fa; /* Light background */
+  border-radius: 12px; /* More rounded corners */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08); /* Softer, more pronounced shadow */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
 }
 
-.page-title {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 30px;
-  color: #2d3748;
+h1 {
+  color: #2c3e50;
+  margin-bottom: 35px; /* More space below heading */
   text-align: center;
+  font-size: 2.8em; /* Larger welcome message */
+  font-weight: 700;
 }
 
-/* Summary Cards */
+/* Summary Cards Grid */
 .dashboard-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 40px;
-  width: 100%;
+  /* Adjust grid columns to fit the two cards you want to display */
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px; /* Increased gap */
+  margin: 40px 0; /* More vertical margin */
+  justify-content: center; /* Center the cards if there's extra space */
 }
 
 .summary-card {
   background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  border-radius: 12px; /* More rounded */
+  padding: 25px; /* Increased padding */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08); /* Clearer shadow */
   display: flex;
-  align-items: center;
+  flex-direction: column; /* Stack icon and content vertically */
+  align-items: center; /* Center content horizontally */
+  text-align: center;
   transition: transform 0.2s, box-shadow 0.2s;
   border: 1px solid #e2e8f0;
 }
 
 .summary-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-5px); /* Lift effect on hover */
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
 }
 
 .summary-icon {
-  width: 60px;
-  height: 60px;
+  width: 70px; /* Larger icon container */
+  height: 70px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 20px;
+  margin-bottom: 15px; /* Space between icon and text */
   flex-shrink: 0;
 }
 
 .summary-icon .icon {
-  font-size: 28px;
+  font-size: 36px; /* Larger icon */
 }
 
 .users-icon {
-  background-color: #ebf8ff;
-  color: #3182ce;
-}
-
-.content-icon {
-  background-color: #fff5f5;
-  color: #f56565;
-}
-
-.training-icon {
-  background-color: #fefcbf;
-  color: #d69e2e;
+  background-color: #ebf8ff; /* Light blue */
+  color: #3182ce; /* Darker blue */
 }
 
 .simulation-icon {
-  background-color: #ebfaf1;
-  color: #38a169;
+  background-color: #ebfaf1; /* Light green */
+  color: #38a169; /* Darker green */
 }
 
+/* Removed content-icon and training-icon styles as those cards are no longer present */
+
 .summary-content h3 {
-  margin: 0 0 8px 0;
-  font-size: 14px;
-  font-weight: 500;
-  color: #718096;
+  margin: 0 0 10px 0;
+  font-size: 1.2em; /* Larger stat title */
+  font-weight: 600;
+  color: #555;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .summary-content p {
   margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #2d3748;
+  font-size: 3.5em; /* Very large value */
+  font-weight: bold;
+  color: #007bff; /* Primary blue color for values */
 }
 
-/* Dashboard Sections */
-.dashboard-section {
-  background: white;
-  border-radius: 12px;
-  padding: 30px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-  margin-bottom: 30px;
-  border: 1px solid #e2e8f0;
-  width: 100%;
-}
-
-.section-title {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0 0 20px 0;
-  color: #2d3748;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #e2e8f0;
-}
-
-/* Activity List */
-.activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.activity-item {
-  display: flex;
-  align-items: center;
-  padding: 15px;
-  border-radius: 8px;
-  background-color: #f7fafc;
-  transition: background-color 0.2s;
-}
-
-.activity-item:hover {
-  background-color: #edf2f7;
-}
-
-.activity-icon {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background-color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 20px;
-  flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.activity-icon .icon {
-  font-size: 20px;
-  color: #4a5568;
-}
-
-.activity-details {
-  flex: 1;
-}
-
-.activity-message {
-  margin: 0 0 5px 0;
-  font-size: 15px;
-  font-weight: 500;
-  color: #2d3748;
-}
-
-.activity-time {
-  margin: 0;
-  font-size: 13px;
-  color: #718096;
-}
-
-/* Quick Actions */
-.quick-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-}
-
-.action-btn {
-  background: #f7fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  min-height: 120px;
-}
-
-.action-btn:hover {
-  background: #ebf8ff;
-  border-color: #3182ce;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.15);
-}
-
-.action-btn span:last-child {
-  margin-top: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #4a5568;
-}
-
-.action-icon {
-  font-size: 24px;
-  color: #3182ce;
-}
+/* Removed styles for .dashboard-section, .section-title, .activity-list, .activity-item, etc. */
+/* Removed styles for .quick-actions, .action-btn, etc. */
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .admin-container {
+    padding: 20px;
+    margin: 20px auto;
+  }
+  
+  h1 {
+    font-size: 2.2em;
+  }
+  
   .dashboard-summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* Stack cards on smaller screens */
     gap: 15px;
   }
   
   .summary-card {
     padding: 20px;
-  }
-  
-  .dashboard-section {
-    padding: 20px;
-  }
-  
-  .page-title {
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
-  
-  .quick-actions {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-  }
-  
-  .action-btn {
-    min-height: 100px;
-    padding: 15px;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-summary {
-    grid-template-columns: 1fr;
-  }
-  
-  .quick-actions {
-    grid-template-columns: 1fr;
-  }
-  
-  .summary-card {
-    flex-direction: column;
-    text-align: center;
   }
   
   .summary-icon {
-    margin-right: 0;
-    margin-bottom: 15px;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
+  }
+  
+  .summary-icon .icon {
+    font-size: 30px;
+  }
+  
+  .summary-content h3 {
+    font-size: 1.1em;
+  }
+  
+  .summary-content p {
+    font-size: 3em;
   }
 }
 </style>
