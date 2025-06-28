@@ -18,6 +18,7 @@
           <h1 class="system-title">Longitude & Latitude Learning System</h1>
           <div class="nav-right">
             <span class="user-email">{{ currentUserEmail }}</span>
+            <span v-if="isAdmin" class="admin-badge">Admin</span>
             <button @click="logout" class="logout-btn">Logout</button>
           </div>
         </div>
@@ -37,8 +38,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { auth } from '@/firebase';
+import { auth, db } from '@/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import Sidebar from '@/components/Sidebar.vue';
 
 const router = useRouter();
@@ -46,18 +48,68 @@ const route = useRoute();
 
 const user = ref(null);
 const loading = ref(true);
+const userRole = ref('user'); // Default role
 const currentUserEmail = computed(() => user.value?.email || '');
-const isAdmin = computed(() => currentUserEmail.value === 'alvn4407@gmail.com');
+const isAdmin = computed(() => userRole.value === 'admin');
 
 const isGuestPage = computed(() => {
   const guestRoutes = ['/', '/login', 'Home', 'Login'];
   return guestRoutes.includes(route.path) || guestRoutes.includes(route.name);
 });
 
+// Get or create user profile in Firestore
+const getUserProfile = async (user) => {
+  try {
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userDocRef);
+    
+    if (userDoc.exists()) {
+      // User profile exists, get their role
+      const userData = userDoc.data();
+      return userData.role || 'user';
+    } else {
+      // New user, create profile with default 'user' role
+      await setDoc(userDocRef, {
+        email: user.email,
+        role: 'user', // Default role for new users
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString()
+      });
+      
+      return 'user';
+    }
+  } catch (error) {
+    console.error('Error getting/creating user profile:', error);
+    return 'user'; // Default to user role on error
+  }
+};
+
+// Update last login timestamp
+const updateLastLogin = async (user) => {
+  try {
+    const userDocRef = doc(db, 'users', user.uid);
+    await setDoc(userDocRef, {
+      lastLogin: new Date().toISOString()
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error updating last login:', error);
+  }
+};
+
 const initAuth = () => {
   return new Promise((resolve) => {
-    onAuthStateChanged(auth, (firebaseUser) => {
+    onAuthStateChanged(auth, async (firebaseUser) => {
       user.value = firebaseUser;
+      
+      if (firebaseUser) {
+        // Get user role from Firestore
+        userRole.value = await getUserProfile(firebaseUser);
+        // Update last login
+        await updateLastLogin(firebaseUser);
+      } else {
+        userRole.value = 'user';
+      }
+      
       loading.value = false;
       resolve();
     });
@@ -68,6 +120,7 @@ const logout = async () => {
   try {
     await signOut(auth);
     user.value = null;
+    userRole.value = 'user';
     router.push('/login');
   } catch (error) {
     console.error('Logout error:', error);
@@ -145,6 +198,16 @@ onMounted(async () => {
 .user-email {
   font-size: 0.9rem;
   color: #4a5568;
+}
+
+.admin-badge {
+  background-color: #38a169;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 .logout-btn {
