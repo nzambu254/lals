@@ -22,6 +22,64 @@
       </div>
     </div>
 
+    <!-- Interactive Coordinate Input Section -->
+    <div class="coordinate-input-section">
+      <h3>Plot Your Own Coordinates</h3>
+      <div class="coordinate-inputs">
+        <div class="input-group">
+          <label for="latitude">Latitude (°)</label>
+          <input 
+            type="number" 
+            id="latitude" 
+            v-model.number="userLatitude" 
+            @input="plotUserCoordinate"
+            min="-90" 
+            max="90" 
+            step="0.1"
+            placeholder="e.g., 40.7128"
+          >
+          <small>Range: -90° (South) to +90° (North)</small>
+        </div>
+        
+        <div class="input-group">
+          <label for="longitude">Longitude (°)</label>
+          <input 
+            type="number" 
+            id="longitude" 
+            v-model.number="userLongitude" 
+            @input="plotUserCoordinate"
+            min="-180" 
+            max="180" 
+            step="0.1"
+            placeholder="e.g., -74.0060"
+          >
+          <small>Range: -180° (West) to +180° (East)</small>
+        </div>
+      </div>
+      
+      <div class="coordinate-examples">
+        <h4>Try These Famous Locations:</h4>
+        <div class="example-buttons">
+          <button @click="setCoordinate(40.7128, -74.0060, 'New York City')">New York City</button>
+          <button @click="setCoordinate(51.5074, -0.1278, 'London')">London</button>
+          <button @click="setCoordinate(35.6762, 139.6503, 'Tokyo')">Tokyo</button>
+          <button @click="setCoordinate(-33.8688, 151.2093, 'Sydney')">Sydney</button>
+          <button @click="setCoordinate(0, 0, 'Prime Meridian & Equator')">0°, 0°</button>
+          <button @click="clearCoordinate()">Clear Point</button>
+        </div>
+      </div>
+      
+      <div v-if="currentLocation" class="current-location">
+        <strong>Current Point:</strong> {{ currentLocation }}
+        <br>
+        <strong>Coordinates:</strong> {{ userLatitude }}°, {{ userLongitude }}°
+        <br>
+        <strong>Hemisphere:</strong> 
+        {{ userLatitude >= 0 ? 'Northern' : 'Southern' }} Hemisphere, 
+        {{ userLongitude >= 0 ? 'Eastern' : 'Western' }} Hemisphere
+      </div>
+    </div>
+
     <div class="map-container" ref="mapContainer"></div>
 
     <div class="coordinates-display">
@@ -51,6 +109,7 @@
       <h3>About Geographic Coordinates</h3>
       <p>The geographic coordinate system is a spherical coordinate system that specifies locations on Earth using latitude and longitude. Latitude measures how far north or south of the equator a point lies, while longitude measures how far east or west of the prime meridian a point lies.</p>
       <p>Different map projections are used to represent the 3D Earth on a 2D surface, each with its own advantages and distortions.</p>
+      <p><strong>Interactive Learning:</strong> Use the coordinate input section above to enter any latitude and longitude values and see exactly where that point appears on the map. Try the example locations or experiment with your own coordinates!</p>
     </div>
   </div>
 </template>
@@ -66,6 +125,75 @@ const mapContainer = ref(null);
 const mapType = ref('world');
 const projection = ref('equirectangular');
 
+// User coordinate inputs
+const userLatitude = ref(null);
+const userLongitude = ref(null);
+const currentLocation = ref('');
+
+// Store the current projection and SVG for coordinate plotting
+let currentProjection = null;
+let currentSvg = null;
+
+const setCoordinate = (lat, lng, locationName) => {
+  userLatitude.value = lat;
+  userLongitude.value = lng;
+  currentLocation.value = locationName;
+  plotUserCoordinate();
+};
+
+const clearCoordinate = () => {
+  userLatitude.value = null;
+  userLongitude.value = null;
+  currentLocation.value = '';
+  if (currentSvg) {
+    currentSvg.selectAll('.user-point').remove();
+  }
+};
+
+const plotUserCoordinate = () => {
+  if (!currentSvg || !currentProjection || userLatitude.value === null || userLongitude.value === null) {
+    return;
+  }
+
+  // Validate coordinates
+  if (userLatitude.value < -90 || userLatitude.value > 90 || 
+      userLongitude.value < -180 || userLongitude.value > 180) {
+    return;
+  }
+
+  // Remove existing user point
+  currentSvg.selectAll('.user-point').remove();
+
+  // Project the coordinates
+  const projectedCoords = currentProjection([userLongitude.value, userLatitude.value]);
+
+  if (projectedCoords) {
+    // Add the user point
+    currentSvg.append('circle')
+      .attr('class', 'user-point')
+      .attr('cx', projectedCoords[0])
+      .attr('cy', projectedCoords[1])
+      .attr('r', 8)
+      .attr('fill', '#ff4444')
+      .attr('stroke', '#ffffff')
+      .attr('stroke-width', 2)
+      .style('cursor', 'pointer');
+
+    // Add a label
+    currentSvg.append('text')
+      .attr('class', 'user-point')
+      .attr('x', projectedCoords[0])
+      .attr('y', projectedCoords[1] - 15)
+      .attr('text-anchor', 'middle')
+      .attr('fill', '#ff4444')
+      .attr('font-size', '12px')
+      .attr('font-weight', 'bold')
+      .attr('stroke', '#ffffff')
+      .attr('stroke-width', 0.5)
+      .text(currentLocation.value || `${userLatitude.value}°, ${userLongitude.value}°`);
+  }
+};
+
 const updateMap = async () => {
   if (!mapContainer.value) return;
 
@@ -79,6 +207,9 @@ const updateMap = async () => {
     .append("svg")
     .attr("width", width)
     .attr("height", height);
+
+  // Store reference to current SVG
+  currentSvg = svg;
 
   let proj;
   switch (projection.value) {
@@ -94,6 +225,9 @@ const updateMap = async () => {
 
   proj.fitSize([width, height], { type: "Sphere" });
   const path = geoPath().projection(proj);
+
+  // Store reference to current projection
+  currentProjection = proj;
 
   svg.append("path")
     .datum({ type: "Sphere" })
@@ -168,6 +302,11 @@ const updateMap = async () => {
       .attr("fill", "none")
       .attr("stroke", "#2196f3")
       .attr("stroke-width", 1.5);
+
+    // Re-plot user coordinate if it exists
+    if (userLatitude.value !== null && userLongitude.value !== null) {
+      plotUserCoordinate();
+    }
 
   } catch (error) {
     console.error("Error loading or drawing map data:", error);
@@ -249,6 +388,116 @@ select:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+/* New styles for coordinate input section */
+.coordinate-input-section {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 12px;
+  padding: 25px;
+  margin: 30px 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.coordinate-input-section h3 {
+  color: #856404;
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1.8em;
+  font-weight: 600;
+}
+
+.coordinate-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-bottom: 25px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 1em;
+}
+
+.input-group input {
+  padding: 12px 15px;
+  border: 2px solid #ced4da;
+  border-radius: 8px;
+  font-size: 1em;
+  background-color: white;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.input-group small {
+  color: #6c757d;
+  font-size: 0.85em;
+  font-style: italic;
+}
+
+.coordinate-examples {
+  margin-bottom: 20px;
+}
+
+.coordinate-examples h4 {
+  color: #495057;
+  margin-bottom: 15px;
+  font-size: 1.1em;
+}
+
+.example-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.example-buttons button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 500;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.example-buttons button:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.example-buttons button:last-child {
+  background-color: #dc3545;
+}
+
+.example-buttons button:last-child:hover {
+  background-color: #c82333;
+}
+
+.current-location {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #ffeaa7;
+  font-size: 0.95em;
+  line-height: 1.6;
+  color: #495057;
 }
 
 .map-container {
@@ -344,13 +593,22 @@ select:focus {
     flex-direction: column;
     align-items: stretch;
   }
+  
   select {
     min-width: unset;
     width: 100%;
   }
 
+  .coordinate-inputs {
+    grid-template-columns: 1fr;
+  }
+
   .grid-system {
     grid-template-columns: 1fr;
+  }
+
+  .example-buttons {
+    justify-content: center;
   }
 }
 </style>
