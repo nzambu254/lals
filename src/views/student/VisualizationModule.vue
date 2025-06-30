@@ -32,7 +32,6 @@
             type="number" 
             id="latitude" 
             v-model.number="userLatitude" 
-            @input="plotUserCoordinate"
             min="-90" 
             max="90" 
             step="0.1"
@@ -47,7 +46,6 @@
             type="number" 
             id="longitude" 
             v-model.number="userLongitude" 
-            @input="plotUserCoordinate"
             min="-180" 
             max="180" 
             step="0.1"
@@ -57,6 +55,10 @@
         </div>
       </div>
       
+      <div class="plot-button">
+        <button @click="plotUserCoordinate">Plot Point</button>
+      </div>
+      
       <div class="coordinate-examples">
         <h4>Try These Famous Locations:</h4>
         <div class="example-buttons">
@@ -64,6 +66,9 @@
           <button @click="setCoordinate(51.5074, -0.1278, 'London')">London</button>
           <button @click="setCoordinate(35.6762, 139.6503, 'Tokyo')">Tokyo</button>
           <button @click="setCoordinate(-33.8688, 151.2093, 'Sydney')">Sydney</button>
+          <button @click="setCoordinate(-1.286389, 36.817223, 'Nairobi')">Nairobi</button>
+          <button @click="setCoordinate(-4.0435, 39.6682, 'Mombasa')">Mombasa</button>
+          <button @click="setCoordinate(-0.3031, 36.0800, 'Nakuru')">Nakuru</button>
           <button @click="setCoordinate(0, 0, 'Prime Meridian & Equator')">0°, 0°</button>
           <button @click="clearCoordinate()">Clear Point</button>
         </div>
@@ -158,6 +163,7 @@ const plotUserCoordinate = () => {
   // Validate coordinates
   if (userLatitude.value < -90 || userLatitude.value > 90 || 
       userLongitude.value < -180 || userLongitude.value > 180) {
+    alert('Please enter valid coordinates:\nLatitude: -90 to 90\nLongitude: -180 to 180');
     return;
   }
 
@@ -449,6 +455,29 @@ select:focus {
   font-style: italic;
 }
 
+.plot-button {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 25px;
+}
+
+.plot-button button {
+  padding: 12px 24px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.plot-button button:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+}
+
 .coordinate-examples {
   margin-bottom: 20px;
 }
@@ -463,6 +492,7 @@ select:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  justify-content: center;
 }
 
 .example-buttons button {
