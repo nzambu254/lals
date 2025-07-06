@@ -31,6 +31,34 @@
       </div>
     </div>
 
+    <!-- Lesson Reports Section -->
+    <div class="card lesson-reports-card">
+      <div class="card-header">
+        <h3>Lesson Reports</h3>
+        <div class="report-actions">
+          <button @click="downloadLessonReport('pdf')" class="btn-download">Download PDF</button>
+          <button @click="downloadLessonReport('csv')" class="btn-download">Download CSV</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div v-if="loading" class="loading-message">Loading lessons...</div>
+        <div v-else-if="lessonContent.length === 0" class="no-content-message">No lessons found.</div>
+        <div v-else class="lessons-summary">
+          <p class="summary-text">Total Lessons: <strong>{{ lessonContent.length }}</strong></p>
+          <div class="lessons-grid">
+            <div v-for="lesson in lessonContent" :key="lesson.id" class="lesson-card">
+              <h4 class="lesson-title">{{ lesson.title }}</h4>
+              <p class="lesson-description">{{ lesson.description }}</p>
+              <div class="lesson-meta">
+                <span class="lesson-date">Created: {{ formatDate(lesson.createdAt) }}</span>
+                <span class="lesson-updated">Updated: {{ formatDate(lesson.updatedAt) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- All Content List Section -->
     <div class="card all-content-card">
       <div class="card-header">
@@ -109,9 +137,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { db } from '@/firebase'; // Assuming db is exported from '@/firebase'
 import { collection, query, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import jsPDF from 'jspdf'; // Import jsPDF for PDF generation
 
 // Reactive state for creating new content
 const newContent = ref({
@@ -134,6 +163,134 @@ const showDeleteConfirm = ref(false);
 const contentToDelete = ref(null);
 
 let unsubscribe; // To store the unsubscribe function for the real-time listener
+
+// Computed property to filter lessons from all content
+const lessonContent = computed(() => {
+  return allContent.value.filter(item => item.type === 'lesson');
+});
+
+// --- Utility Functions ---
+
+// Format date for display
+const formatDate = (timestamp) => {
+  if (!timestamp) return 'N/A';
+  
+  // Handle Firestore timestamp
+  if (timestamp.toDate) {
+    return timestamp.toDate().toLocaleDateString();
+  }
+  
+  // Handle regular Date object or string
+  return new Date(timestamp).toLocaleDateString();
+};
+
+// Download lesson report function
+const downloadLessonReport = (format) => {
+  const lessons = lessonContent.value;
+  
+  if (lessons.length === 0) {
+    alert('No lessons available to download');
+    return;
+  }
+
+  const reportData = lessons.map(lesson => ({
+    title: lesson.title,
+    description: lesson.description,
+    createdAt: formatDate(lesson.createdAt),
+    updatedAt: formatDate(lesson.updatedAt)
+  }));
+
+  const timestamp = new Date().toISOString().split('T')[0];
+  
+  if (format === 'csv') {
+    downloadCSV(reportData, `lesson-report-${timestamp}.csv`);
+  } else if (format === 'pdf') {
+    downloadPDF(reportData, `lesson-report-${timestamp}.pdf`);
+  }
+};
+
+// Download CSV function
+const downloadCSV = (data, filename) => {
+  const headers = ['Title', 'Description', 'Created At', 'Updated At'];
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row => [
+      `"${row.title.replace(/"/g, '""')}"`,
+      `"${row.description.replace(/"/g, '""')}"`,
+      `"${row.createdAt}"`,
+      `"${row.updatedAt}"`
+    ].join(','))
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+// Download PDF function
+const downloadPDF = (data, filename) => {
+  const doc = new jsPDF();
+  
+  // Add title
+  doc.setFontSize(18);
+  doc.text('Lesson Report', 105, 15, { align: 'center' });
+  
+  // Add date
+  doc.setFontSize(12);
+  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 25, { align: 'center' });
+  
+  // Add table headers
+  doc.setFontSize(14);
+  doc.text('Title', 15, 40);
+  doc.text('Description', 60, 40);
+  doc.text('Created', 140, 40);
+  doc.text('Updated', 175, 40);
+  
+  // Add table content
+  doc.setFontSize(12);
+  let y = 50;
+  
+  data.forEach((lesson, index) => {
+    if (y > 280) { // Add new page if we're near the bottom
+      doc.addPage();
+      y = 20;
+      // Repeat headers on new page
+      doc.setFontSize(14);
+      doc.text('Title', 15, y);
+      doc.text('Description', 60, y);
+      doc.text('Created', 140, y);
+      doc.text('Updated', 175, y);
+      y = 30;
+      doc.setFontSize(12);
+    }
+    
+    // Split description into multiple lines if needed
+    const descriptionLines = doc.splitTextToSize(lesson.description, 50);
+    
+    doc.text(lesson.title, 15, y);
+    doc.text(descriptionLines, 60, y);
+    doc.text(lesson.createdAt, 140, y);
+    doc.text(lesson.updatedAt, 175, y);
+    
+    // Move y position based on description height
+    y += Math.max(10, descriptionLines.length * 7);
+    
+    // Add a line between entries if not last item
+    if (index < data.length - 1) {
+      doc.line(15, y, 195, y);
+      y += 5;
+    }
+  });
+  
+  // Save the PDF
+  doc.save(filename);
+};
 
 // --- Firestore Operations ---
 
@@ -302,6 +459,89 @@ onUnmounted(() => {
 .card-body {
   padding: 25px;
   overflow-x: auto; /* For table responsiveness */
+}
+
+/* Report Actions */
+.report-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-download {
+  padding: 10px 16px;
+  background-color: #48bb78;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-size: 0.9em;
+}
+
+.btn-download:hover {
+  background-color: #38a169;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(72, 187, 120, 0.2);
+}
+
+/* Lesson Reports Styles */
+.lessons-summary {
+  padding: 0;
+}
+
+.summary-text {
+  font-size: 1.1em;
+  color: #4a5568;
+  margin-bottom: 25px;
+  padding: 15px;
+  background-color: #f7fafc;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.lessons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.lesson-card {
+  background: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lesson-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.lesson-title {
+  color: #2d3748;
+  font-size: 1.2em;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+}
+
+.lesson-description {
+  color: #4a5568;
+  margin: 0 0 15px 0;
+  line-height: 1.5;
+}
+
+.lesson-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.85em;
+  color: #718096;
+}
+
+.lesson-date, .lesson-updated {
+  font-weight: 500;
 }
 
 /* Form Styles */
@@ -510,6 +750,16 @@ onUnmounted(() => {
   }
   .card-body {
     padding: 15px;
+  }
+  .report-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .btn-download {
+    width: 100%;
+  }
+  .lessons-grid {
+    grid-template-columns: 1fr;
   }
   .form-group input,
   .form-group textarea,
