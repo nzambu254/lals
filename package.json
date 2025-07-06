@@ -11,8 +11,11 @@
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
     "d3": "^7.9.0",
+    "date-fns": "^4.1.0",
     "firebase": "^11.9.1",
     "html2pdf.js": "^0.10.3",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "pinia": "^3.0.3",
     "topojson-client": "^3.1.0",
     "vue": "^3.5.13",

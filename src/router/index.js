@@ -9,6 +9,7 @@ import AdminDashboard from '@/views/admin/AdminDashboard.vue'
 import UserManagement from '@/views/admin/UserManagement.vue'
 import ContentCreation from '@/views/admin/ContentCreation.vue'
 import SimulationModules from '@/views/admin/SimulationModules.vue'
+import AdminQuizReports from '@/views/admin/AdminQuizReports.vue' // Added new component
 
 // Student Components
 import StudentDashboard from '@/views/student/StudentDashboard.vue'
@@ -17,7 +18,7 @@ import VisualizationModule from '@/views/student/VisualizationModule.vue'
 import DistanceCalculation from '@/views/student/DistanceCalculation.vue'
 import InteractiveQuizzes from '@/views/student/InteractiveQuizzes.vue'
 
-// NEW: Simulation Components
+// Simulation Components
 import IdentifyCoordinatesSimulation from '@/views/Simulations/IdentifyCoordinatesSimulation.vue'
 import GreatCircleMeridianSimulation from '@/views/Simulations/GreatCircleMeridianSimulation.vue'
 import GreatCircleHaversineSimulation from '@/views/Simulations/GreatCircleHaversineSimulation.vue'
@@ -94,6 +95,12 @@ const routes = [
     component: SimulationModules,
     meta: { requiresAuth: true, role: 'admin' }
   },
+  {
+    path: '/admin/quiz-reports',
+    name: 'AdminQuizReports',
+    component: AdminQuizReports,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
 
   // Student Routes
   {
@@ -132,7 +139,7 @@ const routes = [
     meta: { requiresAuth: true, role: 'student' }
   },
 
-  // NEW: Simulation Task Routes (under a common base for students)
+  // Simulation Task Routes (under a common base for students)
   {
     path: '/simulation/101',
     name: 'IdentifyCoordinatesSimulation',
@@ -157,7 +164,6 @@ const routes = [
     component: SmallCircleParallelSimulation,
     meta: { requiresAuth: true, role: 'student' }
   },
-  // Add other simulation routes here following the pattern
 
   // Catch-all route
   {

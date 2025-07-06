@@ -34,6 +34,14 @@
           </div>
 
           <div class="nav-section">
+            <h3 class="nav-section-title">Reports</h3>
+            <router-link to="/admin/quiz-reports" class="nav-link">
+              <span class="nav-icon">📝</span>
+              <span>Quiz Reports</span>
+            </router-link>
+          </div>
+
+          <div class="nav-section">
             <h3 class="nav-section-title">Simulation</h3>
             <router-link to="/admin/simulations" class="nav-link">
               <span class="nav-icon">🔬</span>
