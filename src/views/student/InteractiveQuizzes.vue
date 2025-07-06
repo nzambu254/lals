@@ -6,11 +6,17 @@
         <button @click="showReports = !showReports" class="report-btn">
           {{ showReports ? 'Hide Reports' : 'View Reports' }}
         </button>
+        <button v-if="showReports" @click="printReports" class="print-btn">
+          Print Reports
+        </button>
+        <button v-if="showReports" @click="downloadReports" class="download-btn">
+          Download Reports
+        </button>
       </div>
     </div>
 
     <!-- Reports Section -->
-    <div v-if="showReports" class="reports-section">
+    <div v-if="showReports" class="reports-section" id="reports-section">
       <h2>Student Performance Reports</h2>
       
       <div v-if="quizHistory.length === 0" class="no-reports">
@@ -48,34 +54,15 @@
                   </p>
                 </div>
                 
-                <!-- Workings Upload Section for Calculation Questions -->
-                <div v-if="isCalculationQuestion(qIndex)" class="workings-section">
-                  <h5>Upload Your Workings (Text Format):</h5>
-                  <textarea
-                    v-model="workings[`${index}-${qIndex}`]"
-                    placeholder="Type your step-by-step calculations here..."
-                    rows="4"
-                    class="workings-textarea"
-                  ></textarea>
-                  <div class="workings-actions">
-                    <button @click="saveWorkings(index, qIndex)" class="save-workings-btn">
-                      Save Workings
-                    </button>
-                    <span v-if="attempt.workings && attempt.workings[qIndex]" class="workings-status">
-                      ✅ Workings saved
+                <!-- Display saved workings only if they exist -->
+                <div v-if="attempt.workings && attempt.workings[qIndex]" class="saved-workings">
+                  <h6>Your Saved Workings:</h6>
+                  <div class="workings-content">{{ attempt.workings[qIndex].content }}</div>
+                  <div class="workings-grade">
+                    <span>Grade: {{ attempt.workings[qIndex].grade || 'Not graded' }} / 3</span>
+                    <span v-if="attempt.workings[qIndex].feedback" class="feedback">
+                      Feedback: {{ attempt.workings[qIndex].feedback }}
                     </span>
-                  </div>
-                  
-                  <!-- Display saved workings -->
-                  <div v-if="attempt.workings && attempt.workings[qIndex]" class="saved-workings">
-                    <h6>Your Saved Workings:</h6>
-                    <div class="workings-content">{{ attempt.workings[qIndex].content }}</div>
-                    <div class="workings-grade">
-                      <span>Grade: {{ attempt.workings[qIndex].grade || 'Not graded' }} / 3</span>
-                      <span v-if="attempt.workings[qIndex].feedback" class="feedback">
-                        Feedback: {{ attempt.workings[qIndex].feedback }}
-                      </span>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -94,6 +81,25 @@
           rows="4"
           placeholder="Type your answer here..."
         ></textarea>
+        
+        <!-- Workings Upload Section in Quiz -->
+        <div v-if="isCalculationQuestion(index)" class="workings-section">
+          <h4>Show Your Workings (Step-by-Step Calculation):</h4>
+          <textarea
+            v-model="quizWorkings[index]"
+            placeholder="Type your step-by-step calculations here..."
+            rows="4"
+            class="workings-textarea"
+          ></textarea>
+          <div class="workings-actions">
+            <button @click="saveQuizWorkings(index)" class="save-workings-btn">
+              Save Workings
+            </button>
+            <span v-if="savedWorkingsStatus[index]" class="workings-status">
+              ✅ Workings saved
+            </span>
+          </div>
+        </div>
       </div>
 
       <button @click="submitQuiz" class="submit-btn">Submit Answers</button>
@@ -111,11 +117,18 @@
         <p :class="{ correct: isCorrect(index), wrong: !isCorrect(index) }">
           {{ isCorrect(index) ? '✅ Correct' : '❌ Incorrect' }}
         </p>
+        
+        <!-- Show saved workings in results -->
+        <div v-if="isCalculationQuestion(index) && quizWorkings[index]" class="saved-workings">
+          <h5>Your Workings:</h5>
+          <div class="workings-content">{{ quizWorkings[index] }}</div>
+        </div>
       </div>
 
       <div class="result-actions">
         <button @click="resetQuiz" class="retry-btn">Try Again</button>
         <button @click="showReports = true" class="view-reports-btn">View All Reports</button>
+        <button @click="printResults" class="print-btn">Print Results</button>
       </div>
     </div>
   </div>
@@ -127,6 +140,7 @@ import { useRouter } from 'vue-router';
 import { auth, db } from '@/firebase';
 import { doc, setDoc, getDoc, updateDoc, collection, query, where, orderBy, getDocs, serverTimestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import html2pdf from 'html2pdf.js';
 
 const router = useRouter();
 
@@ -243,11 +257,12 @@ const questions = [
 ];
 
 const userAnswers = ref(Array(questions.length).fill(''));
+const quizWorkings = ref(Array(questions.length).fill(''));
+const savedWorkingsStatus = ref(Array(questions.length).fill(false));
 const quizCompleted = ref(false);
 const showReports = ref(false);
 const quizHistory = ref([]);
 const expandedReports = ref({});
-const workings = ref({});
 
 const score = computed(() => {
   return questions.reduce((acc, q, i) => {
@@ -318,6 +333,16 @@ const isCalculationQuestion = (index) => {
   return questions[index].isCalculation;
 };
 
+const saveQuizWorkings = (index) => {
+  if (!quizWorkings.value[index] || !quizWorkings.value[index].trim()) {
+    alert('Please enter your workings before saving.');
+    return;
+  }
+  
+  savedWorkingsStatus.value[index] = true;
+  alert('Workings saved successfully!');
+};
+
 const submitQuiz = async () => {
   quizCompleted.value = true;
   if (user.value?.uid) {
@@ -333,6 +358,16 @@ const submitQuiz = async () => {
       workings: {}
     };
     
+    // Add saved workings to the result
+    quizWorkings.value.forEach((working, index) => {
+      if (working && working.trim()) {
+        result.workings[index] = {
+          content: working.trim(),
+          submittedAt: serverTimestamp()
+        };
+      }
+    });
+    
     // Save to quiz_attempts collection for history
     await setDoc(doc(db, 'quiz_attempts', attemptId), result);
     
@@ -345,6 +380,8 @@ const submitQuiz = async () => {
 
 const resetQuiz = () => {
   userAnswers.value = Array(questions.length).fill('');
+  quizWorkings.value = Array(questions.length).fill('');
+  savedWorkingsStatus.value = Array(questions.length).fill(false);
   quizCompleted.value = false;
   showReports.value = false;
 };
@@ -373,48 +410,6 @@ const toggleReportDetails = (index) => {
   expandedReports.value[index] = !expandedReports.value[index];
 };
 
-const saveWorkings = async (attemptIndex, questionIndex) => {
-  const workingKey = `${attemptIndex}-${questionIndex}`;
-  const workingContent = workings.value[workingKey];
-  
-  if (!workingContent || !workingContent.trim()) {
-    alert('Please enter your workings before saving.');
-    return;
-  }
-  
-  try {
-    const attempt = quizHistory.value[attemptIndex];
-    const attemptRef = doc(db, 'quiz_attempts', attempt.id);
-    
-    const workingData = {
-      content: workingContent.trim(),
-      submittedAt: serverTimestamp(),
-      grade: null,
-      feedback: null
-    };
-    
-    // Update the specific working for this question
-    const updateData = {};
-    updateData[`workings.${questionIndex}`] = workingData;
-    
-    await updateDoc(attemptRef, updateData);
-    
-    // Update local state
-    if (!attempt.workings) {
-      attempt.workings = {};
-    }
-    attempt.workings[questionIndex] = workingData;
-    
-    // Clear the working input
-    workings.value[workingKey] = '';
-    
-    alert('Workings saved successfully!');
-  } catch (error) {
-    console.error("Error saving workings:", error);
-    alert('Error saving workings. Please try again.');
-  }
-};
-
 const formatDate = (timestamp) => {
   if (!timestamp) return 'Unknown date';
   let date;
@@ -426,6 +421,53 @@ const formatDate = (timestamp) => {
     date = new Date(timestamp);
   }
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+};
+
+const printReports = () => {
+  const printContent = document.getElementById('reports-section').innerHTML;
+  const originalContent = document.body.innerHTML;
+  
+  document.body.innerHTML = `
+    <div class="print-header">
+      <h1>Latitude & Longitude Practice Reports</h1>
+      <p>Printed on: ${new Date().toLocaleString()}</p>
+    </div>
+    ${printContent}
+  `;
+  
+  window.print();
+  document.body.innerHTML = originalContent;
+  window.location.reload();
+};
+
+const downloadReports = () => {
+  const element = document.getElementById('reports-section');
+  const opt = {
+    margin: 10,
+    filename: `GeoQuiz_Reports_${new Date().toISOString().slice(0,10)}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  
+  html2pdf().from(element).set(opt).save();
+};
+
+const printResults = () => {
+  const printContent = document.querySelector('.results-section').innerHTML;
+  const originalContent = document.body.innerHTML;
+  
+  document.body.innerHTML = `
+    <div class="print-header">
+      <h1>Latitude & Longitude Practice Results</h1>
+      <p>Printed on: ${new Date().toLocaleString()}</p>
+    </div>
+    ${printContent}
+  `;
+  
+  window.print();
+  document.body.innerHTML = originalContent;
+  window.location.reload();
 };
 </script>
 
@@ -472,14 +514,32 @@ const formatDate = (timestamp) => {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
 }
 
 .report-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+  box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+}
+
+.print-btn, .download-btn {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.print-btn:hover, .download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.4);
 }
 
 /* Reports Section */
@@ -612,61 +672,6 @@ const formatDate = (timestamp) => {
   font-size: 1rem;
 }
 
-.workings-section {
-  margin-top: 1.5rem;
-  padding: 1.5rem;
-  background: #ffffff;
-  border-radius: 8px;
-  border: 2px dashed #3498db;
-}
-
-.workings-section h5 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: #2c3e50;
-  font-size: 1rem;
-}
-
-.workings-textarea {
-  width: 100%;
-  padding: 1rem;
-  border: 1px solid #cccccc;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  resize: vertical;
-  min-height: 100px;
-  margin-bottom: 1rem;
-}
-
-.workings-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.save-workings-btn {
-  padding: 0.6rem 1.2rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: #27ae60;
-  color: white;
-}
-
-.save-workings-btn:hover {
-  background: #219a52;
-}
-
-.workings-status {
-  color: #27ae60;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
 .saved-workings {
   margin-top: 1rem;
   padding: 1rem;
@@ -675,7 +680,7 @@ const formatDate = (timestamp) => {
   border: 1px solid #c3e6c3;
 }
 
-.saved-workings h6 {
+.saved-workings h5, .saved-workings h6 {
   margin-top: 0;
   margin-bottom: 0.5rem;
   color: #2c3e50;
@@ -739,6 +744,61 @@ const formatDate = (timestamp) => {
   font-weight: 600;
 }
 
+.workings-section {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 2px dashed #3498db;
+}
+
+.workings-section h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.workings-textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 100px;
+  margin-bottom: 1rem;
+}
+
+.workings-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.save-workings-btn {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #27ae60;
+  color: white;
+}
+
+.save-workings-btn:hover {
+  background: #219a52;
+}
+
+.workings-status {
+  color: #27ae60;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 textarea {
   width: 100%;
   padding: 1rem 1.2rem;
@@ -757,7 +817,7 @@ textarea:focus {
   box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.2);
 }
 
-.submit-btn, .retry-btn, .view-reports-btn {
+.submit-btn, .retry-btn, .view-reports-btn, .print-btn {
   width: auto;
   align-self: flex-end;
   padding: 1.1rem 2.5rem;
@@ -794,53 +854,8 @@ textarea:focus {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.view-reports-btn {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
-}
-
-.view-reports-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
-}
-
-.result-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 2rem;
-}
-
 /* Results Section */
 .results-section {
-  padding: 1rem;
-}
-
-.results-section h2 {
-  font-size: 2rem;
-  color: #2c3e50;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.score-display {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 2.5rem;
-  color: #2c3e50;
-  text-align: center;
-  background-color: #ecf0f1;
-  padding: 1rem 2rem;
-  border-radius: 10px;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.result-block {
-  margin-bottom: 2rem;
   padding: 2rem;
   background: #fdfdfd;
   border-radius: 12px;
@@ -848,35 +863,110 @@ textarea:focus {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
+.results-section h2 {
+  font-size: 1.8rem;
+  color: #2c3e50;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.score-display {
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.result-block {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
 .result-block h4 {
   margin-top: 0;
   margin-bottom: 1rem;
-  color: #34495e;
-  font-size: 1.2rem;
-  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1.1rem;
 }
 
 .result-block p {
-  margin: 0.6rem 0;
-  font-size: 1.05rem;
-}
-
-.result-block p strong {
-  color: #555555;
+  margin: 0.5rem 0;
+  font-size: 1rem;
 }
 
 .correct {
   color: #27ae60;
-  font-weight: 700;
-  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .wrong {
   color: #e74c3c;
-  font-weight:600;
-  font-size: 1.1rem;
+  font-weight: 600;
 }
 
+.result-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 3rem;
+  flex-wrap: wrap;
+}
+
+.view-reports-btn {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  color: white;
+  box-shadow: 0 6px 15px rgba(155, 89, 182, 0.25);
+}
+
+.view-reports-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(155, 89, 182, 0.4);
+}
+
+/* Print-specific styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-header, .print-header *,
+  #reports-section, #reports-section *,
+  .results-section, .results-section * {
+    visibility: visible;
+  }
+  .print-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #333;
+  }
+  .geo-quiz-container, .quiz-section, .results-section {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+  .report-btn, .print-btn, .download-btn,
+  .details-btn, .submit-btn, .retry-btn,
+  .view-reports-btn {
+    display: none !important;
+  }
+  .report-card {
+    page-break-inside: avoid;
+  }
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .geo-quiz-container {
     padding: 1.5rem;
@@ -886,17 +976,12 @@ textarea:focus {
   .quiz-header {
     flex-direction: column;
     gap: 1rem;
-    text-align: center;
-  }
-  
-  .reports-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .report-header {
-    flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+  }
+  
+  .header-buttons {
+    width: 100%;
+    flex-wrap: wrap;
   }
   
   .result-actions {
@@ -904,92 +989,26 @@ textarea:focus {
     gap: 1rem;
   }
   
-  .submit-btn, .retry-btn, .view-reports-btn {
+  .result-actions button {
     width: 100%;
   }
 }
 
-/* Animation for correct/wrong answers */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.result-block {
-  animation: fadeIn 0.4s ease-out forwards;
-}
-
-/* Loading state for when saving workings */
-.workings-saving {
-  position: relative;
-}
-
-.workings-saving::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Tooltip for additional help */
-.tooltip {
-  position: relative;
-  display: inline-block;
-  margin-left: 0.5rem;
-  cursor: help;
-}
-
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 200px;
-  background-color: #333;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 0.5rem;
-  position: absolute;
-  z-index: 1;
-  bottom: 125%;
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 0.3s;
-  font-size: 0.8rem;
-  font-weight: normal;
-}
-
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-  opacity: 1;
-}
-
-/* Print-specific styles */
-@media print {
+@media (max-width: 480px) {
   .geo-quiz-container {
-    box-shadow: none;
-    padding: 0;
-    margin: 0;
+    padding: 1rem;
   }
   
-  .quiz-header, .header-buttons {
-    display: none;
+  .quiz-header h1 {
+    font-size: 1.8rem;
   }
   
-  .report-card {
-    page-break-inside: avoid;
-    box-shadow: none;
-    border: 1px solid #ddd;
+  .report-card, .question-block, .result-block {
+    padding: 1rem;
   }
   
-  button {
-    display: none;
+  .workings-section {
+    padding: 1rem;
   }
 }
 </style>
