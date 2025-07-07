@@ -79,6 +79,21 @@
             </router-link>
           </div>
         </template>
+
+        <!-- Notifications Section (Common for both) -->
+        <div class="nav-section">
+          <h3 class="nav-section-title">Notifications</h3>
+          <router-link 
+            :to="isAdmin ? '/admin/notifications' : '/student/notifications'" 
+            class="nav-link"
+          >
+            <span class="nav-icon">🔔</span>
+            <span>Notifications</span>
+            <span v-if="unreadCount > 0" class="notification-badge">
+              {{ unreadCount }}
+            </span>
+          </router-link>
+        </div>
       </nav>
 
       <!-- Footer (Toggle Sidebar + Logout) -->
@@ -101,10 +116,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { auth } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { db } from '@/firebase';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 const props = defineProps({
   isAdmin: { type: Boolean, default: false },
@@ -112,6 +129,8 @@ const props = defineProps({
 
 const router = useRouter();
 const isSidebarOpen = ref(true);
+const unreadCount = ref(0);
+let unsubscribeNotifications = null;
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value;
@@ -129,6 +148,29 @@ const handleLogout = async () => {
     console.error('Logout error:', error);
   }
 };
+
+// Fetch notifications count
+onMounted(async () => {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const notificationsRef = collection(db, 'notifications');
+  const q = query(
+    notificationsRef,
+    where('recipientId', '==', user.uid),
+    where('read', '==', false)
+  );
+
+  unsubscribeNotifications = onSnapshot(q, (snapshot) => {
+    unreadCount.value = snapshot.size;
+  });
+});
+
+onUnmounted(() => {
+  if (unsubscribeNotifications) {
+    unsubscribeNotifications();
+  }
+});
 </script>
 
 <style scoped>
@@ -196,6 +238,7 @@ const handleLogout = async () => {
   text-decoration: none;
   transition: background-color 0.2s;
   white-space: nowrap;
+  position: relative;
 }
 
 .nav-link:hover {
@@ -216,6 +259,19 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.notification-badge {
+  background-color: #f56565;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  margin-left: auto;
 }
 
 /* Footer */
@@ -311,5 +367,11 @@ const handleLogout = async () => {
 
 .sidebar-collapsed .logout-button span:not(.logout-icon) {
   display: none;
+}
+
+.sidebar-collapsed .notification-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
 }
 </style>

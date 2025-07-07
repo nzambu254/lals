@@ -9,7 +9,8 @@ import AdminDashboard from '@/views/admin/AdminDashboard.vue'
 import UserManagement from '@/views/admin/UserManagement.vue'
 import ContentCreation from '@/views/admin/ContentCreation.vue'
 import SimulationModules from '@/views/admin/SimulationModules.vue'
-import AdminQuizReports from '@/views/admin/AdminQuizReports.vue' // Added new component
+import AdminQuizReports from '@/views/admin/AdminQuizReports.vue'
+import AdminNotifications from '@/views/admin/AdminNotifications.vue'
 
 // Student Components
 import StudentDashboard from '@/views/student/StudentDashboard.vue'
@@ -17,6 +18,7 @@ import SimulationTasks from '@/views/student/SimulationTasks.vue'
 import VisualizationModule from '@/views/student/VisualizationModule.vue'
 import DistanceCalculation from '@/views/student/DistanceCalculation.vue'
 import InteractiveQuizzes from '@/views/student/InteractiveQuizzes.vue'
+import StudentNotifications from '@/views/student/StudentNotifications.vue'
 
 // Simulation Components
 import IdentifyCoordinatesSimulation from '@/views/Simulations/IdentifyCoordinatesSimulation.vue'
@@ -101,6 +103,12 @@ const routes = [
     component: AdminQuizReports,
     meta: { requiresAuth: true, role: 'admin' }
   },
+  {
+    path: '/admin/notifications',
+    name: 'AdminNotifications',
+    component: AdminNotifications,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
 
   // Student Routes
   {
@@ -136,6 +144,12 @@ const routes = [
     path: '/student/interactive-quizzes',
     name: 'InteractiveQuizzes',
     component: InteractiveQuizzes,
+    meta: { requiresAuth: true, role: 'student' }
+  },
+  {
+    path: '/student/notifications',
+    name: 'StudentNotifications',
+    component: StudentNotifications,
     meta: { requiresAuth: true, role: 'student' }
   },
 
