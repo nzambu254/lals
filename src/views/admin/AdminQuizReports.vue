@@ -83,21 +83,11 @@
             <h3>{{ selectedStudent.name }}</h3>
             <p class="email">{{ selectedStudent.email }}</p>
             <div class="info-grid">
-              <div>
-                <strong>Role:</strong> {{ selectedStudent.role }}
-              </div>
-              <div>
-                <strong>Total Flashcards:</strong> {{ selectedStudent.progress?.totalFlashcards || 0 }}
-              </div>
-              <div>
-                <strong>Created At:</strong> {{ formatDate(selectedStudent.createdAt) }}
-              </div>
-              <div>
-                <strong>Last Login:</strong> {{ formatDate(selectedStudent.lastLogin) }}
-              </div>
-              <div>
-                <strong>Last Viewed:</strong> {{ formatDate(selectedStudent.progress?.lastViewed) }}
-              </div>
+              <div class="role"><strong>Role:</strong> {{ selectedStudent.role }}</div>
+              <div class="flashcards"><strong>Total Flashcards:</strong> {{ selectedStudent.progress?.totalFlashcards || 0 }}</div>
+              <div class="created"><strong>Created At:</strong> {{ formatDate(selectedStudent.createdAt) }}</div>
+              <div class="login"><strong>Last Login:</strong> {{ formatDate(selectedStudent.lastLogin) }}</div>
+              <div class="last-viewed"><strong>Last Viewed:</strong> {{ formatDate(selectedStudent.progress?.lastViewed) }}</div>
             </div>
           </div>
 
@@ -210,11 +200,9 @@ const sortBy = (key) => {
   }
 };
 
-// ✅ Single formatDate function for timestamps, Firestore Timestamps, and strings
 const formatDate = (timestamp) => {
   if (!timestamp) return 'N/A';
   if (timestamp.seconds !== undefined) {
-    // Firestore Timestamp
     return format(new Date(timestamp.seconds * 1000), 'MMM dd, yyyy HH:mm');
   }
   try {
@@ -269,7 +257,6 @@ const downloadPDF = () => {
   doc.save('student_reports.pdf');
 };
 </script>
-
 
 <style scoped>
 .quiz-reports-container {
@@ -396,21 +383,36 @@ tr:hover { background-color: #f5f5f5; }
 .modal-body { padding: 20px; }
 .modal-footer { padding: 15px 20px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; }
 
+/* Colorful Student Card */
 .student-card {
-  background: #f9fafc;
-  padding: 15px;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #0c0d0e 0%, #0f0f0f 100%);
+  padding: 20px;
+  border-radius: 12px;
   margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  color: #fff;
 }
-.student-card h3 { margin: 0; color: #333; }
-.student-card .email { color: #666; margin-bottom: 10px; }
+.student-card h3 { margin: 0 0 5px; }
+.student-card .email { color: rgba(255,255,255,0.9); margin-bottom: 15px; }
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+.info-grid div {
+  background: rgba(255,255,255,0.15);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+.info-grid div:hover {
+  background: rgba(255,255,255,0.3);
 }
 
+/* Answers Section */
 .answers-section {
   margin-bottom: 20px;
   border: 1px solid #eee;

@@ -17,8 +17,10 @@
         <div class="nav-content">
           <h1 class="system-title">Prime numbers Learning System</h1>
           <div class="nav-right">
-            <span class="user-email">{{ currentUserEmail }}</span>
-            <span v-if="isAdmin" class="admin-badge">Admin</span>
+            <div class="user-info">
+              <span class="user-name">{{ currentUserName }}</span>
+              <span class="user-role">{{ currentUserRole }}</span>
+            </div>
             <button @click="logout" class="logout-btn">Logout</button>
           </div>
         </div>
@@ -48,8 +50,11 @@ const route = useRoute();
 
 const user = ref(null);
 const loading = ref(true);
-const userRole = ref('user'); // Default role
-const currentUserEmail = computed(() => user.value?.email || '');
+const userRole = ref('student'); // Default role if not found
+const userName = ref('Guest');   // Default name if not found
+
+const currentUserName = computed(() => userName.value);
+const currentUserRole = computed(() => userRole.value);
 const isAdmin = computed(() => userRole.value === 'admin');
 
 const isGuestPage = computed(() => {
@@ -62,25 +67,31 @@ const getUserProfile = async (user) => {
   try {
     const userDocRef = doc(db, 'users', user.uid);
     const userDoc = await getDoc(userDocRef);
-    
+
     if (userDoc.exists()) {
-      // User profile exists, get their role
       const userData = userDoc.data();
-      return userData.role || 'user';
+      userName.value = userData.name || user.email;
+      userRole.value = userData.role || 'student';
+      return userRole.value;
     } else {
-      // New user, create profile with default 'user' role
+      // New user, create profile
       await setDoc(userDocRef, {
+        name: user.displayName || user.email,
         email: user.email,
-        role: 'user', // Default role for new users
+        role: 'student',
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       });
-      
-      return 'user';
+
+      userName.value = user.displayName || user.email;
+      userRole.value = 'student';
+      return 'student';
     }
   } catch (error) {
     console.error('Error getting/creating user profile:', error);
-    return 'user'; // Default to user role on error
+    userName.value = user.email;
+    userRole.value = 'student';
+    return 'student';
   }
 };
 
@@ -100,16 +111,12 @@ const initAuth = () => {
   return new Promise((resolve) => {
     onAuthStateChanged(auth, async (firebaseUser) => {
       user.value = firebaseUser;
-      
+
       if (firebaseUser) {
-        // Get user role from Firestore
-        userRole.value = await getUserProfile(firebaseUser);
-        // Update last login
+        await getUserProfile(firebaseUser);
         await updateLastLogin(firebaseUser);
-      } else {
-        userRole.value = 'user';
       }
-      
+
       loading.value = false;
       resolve();
     });
@@ -120,7 +127,8 @@ const logout = async () => {
   try {
     await signOut(auth);
     user.value = null;
-    userRole.value = 'user';
+    userRole.value = 'student';
+    userName.value = 'Guest';
     router.push('/login');
   } catch (error) {
     console.error('Logout error:', error);
@@ -195,19 +203,23 @@ onMounted(async () => {
   gap: 15px;
 }
 
-.user-email {
-  font-size: 0.9rem;
-  color: #4a5568;
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
-.admin-badge {
-  background-color: #38a169;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.75rem;
+.user-name {
+  font-size: 0.95rem;
+  color: #2d3748;
   font-weight: 600;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  color: #4a5568;
   text-transform: uppercase;
+  margin-top: 2px;
 }
 
 .logout-btn {
