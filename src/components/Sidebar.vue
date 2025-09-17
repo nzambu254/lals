@@ -17,7 +17,7 @@
           <div class="nav-section">
             <router-link to="/admin/dashboard" class="nav-link">
               <span class="nav-icon">📊</span>
-              <span>Admin Dashboard</span>
+              <span>Dashboard</span>
             </router-link>
           </div>
 
@@ -27,10 +27,6 @@
               <span class="nav-icon">👥</span>
               <span>User Management</span>
             </router-link>
-            <router-link to="/admin/content" class="nav-link">
-              <span class="nav-icon">📄</span>
-              <span>Content Creation</span>
-            </router-link>
           </div>
 
           <div class="nav-section">
@@ -38,14 +34,6 @@
             <router-link to="/admin/quiz-reports" class="nav-link">
               <span class="nav-icon">📝</span>
               <span>Quiz Reports</span>
-            </router-link>
-          </div>
-
-          <div class="nav-section">
-            <h3 class="nav-section-title">Simulation</h3>
-            <router-link to="/admin/simulations" class="nav-link">
-              <span class="nav-icon">🔬</span>
-              <span>Simulation Modules</span>
             </router-link>
           </div>
         </template>
@@ -61,21 +49,13 @@
 
           <div class="nav-section">
             <h3 class="nav-section-title">Learning</h3>
-            <router-link to="/student/visualization" class="nav-link">
-              <span class="nav-icon">📊</span>
-              <span>Visualization Module</span>
-            </router-link>
-            <router-link to="/student/simulations" class="nav-link">
-              <span class="nav-icon">🔬</span>
-              <span>Simulation Tasks</span>
-            </router-link>
-            <router-link to="/student/distance-calculation" class="nav-link">
-              <span class="nav-icon">📏</span>
-              <span>Distance Calculation</span>
-            </router-link>
             <router-link to="/student/interactive-quizzes" class="nav-link">
               <span class="nav-icon">🎯</span>
               <span>Interactive Quizzes</span>
+            </router-link>
+            <router-link to="/student/flashcards" class="nav-link">
+              <span class="nav-icon">📇</span>
+              <span>Flashcards</span>
             </router-link>
           </div>
         </template>
@@ -139,10 +119,8 @@ const toggleSidebar = () => {
 const handleLogout = async () => {
   try {
     await signOut(auth);
-    // Clear localStorage
     localStorage.removeItem('user');
     localStorage.removeItem('role');
-    // Redirect to login
     router.push('/login');
   } catch (error) {
     console.error('Logout error:', error);
@@ -181,49 +159,49 @@ onUnmounted(() => {
 
 /* Sidebar */
 .sidebar {
-  width: 270px;
-  background-color: #ffffff;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  width: 250px;
+  background: linear-gradient(to bottom, #2c3e50, #3498db);
+  color: white;
   transition: width 0.3s ease;
   display: flex;
   flex-direction: column;
   position: fixed;
   height: 100vh;
   z-index: 100;
+  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-collapsed {
   width: 70px;
-  overflow: hidden;
 }
 
 .sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 20px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-header h2 {
   margin: 0;
   font-size: 1.2rem;
-  color: #2d3748;
+  font-weight: 600;
   white-space: nowrap;
 }
 
 /* Navigation */
 .sidebar-nav {
   flex: 1;
-  padding: 10px 0;
+  padding: 15px 0;
   overflow-y: auto;
 }
 
 .nav-section {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .nav-section-title {
-  padding: 8px 20px;
+  padding: 8px 15px;
   font-size: 0.75rem;
-  color: #718096;
+  color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
@@ -233,21 +211,24 @@ onUnmounted(() => {
 .nav-link {
   display: flex;
   align-items: center;
-  padding: 10px 20px;
-  color: #4a5568;
+  padding: 12px 15px;
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
   white-space: nowrap;
   position: relative;
+  border-left: 3px solid transparent;
 }
 
 .nav-link:hover {
-  background-color: #edf2f7;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
 .nav-link.router-link-active {
-  background-color: #ebf8ff;
-  color: #3182ce;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-left-color: #fff;
 }
 
 .nav-icon {
@@ -262,22 +243,23 @@ onUnmounted(() => {
 }
 
 .notification-badge {
-  background-color: #f56565;
+  background-color: #e74c3c;
   color: white;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.7rem;
   margin-left: auto;
+  padding: 0 5px;
 }
 
 /* Footer */
 .sidebar-footer {
-  padding: 10px;
-  border-top: 1px solid #e2e8f0;
+  padding: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -286,26 +268,22 @@ onUnmounted(() => {
 
 .logout-button,
 .toggle-button {
-  background: none;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
   cursor: pointer;
-  padding: 8px;
+  padding: 8px 12px;
   border-radius: 4px;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #4a5568;
+  color: white;
   font-size: 0.9rem;
 }
 
 .logout-button:hover,
 .toggle-button:hover {
-  background-color: #edf2f7;
-}
-
-.logout-button:hover {
-  color: #e53e3e;
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .logout-icon,
@@ -322,23 +300,33 @@ onUnmounted(() => {
 .main-content {
   flex: 1;
   padding: 20px;
-  margin-left: 270px;
+  margin-left: 250px;
   transition: margin-left 0.3s ease;
   min-height: 100vh;
+  background-color: #f8f9fa;
 }
 
 .main-content.expanded {
   margin-left: 70px;
 }
 
+/* Collapsed sidebar adjustments */
+.sidebar-collapsed .nav-section-title,
+.sidebar-collapsed .nav-link span:not(.nav-icon),
+.sidebar-collapsed .logout-button span:not(.logout-icon) {
+  display: none;
+}
+
+.sidebar-collapsed .notification-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    z-index: 1000;
+    width: 250px;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
   }
@@ -349,29 +337,15 @@ onUnmounted(() => {
   
   .main-content {
     margin-left: 0;
+    padding: 15px;
   }
   
   .main-content.expanded {
     margin-left: 0;
   }
-}
-
-/* Collapsed sidebar adjustments */
-.sidebar-collapsed .nav-section-title {
-  display: none;
-}
-
-.sidebar-collapsed .nav-link span:not(.nav-icon) {
-  display: none;
-}
-
-.sidebar-collapsed .logout-button span:not(.logout-icon) {
-  display: none;
-}
-
-.sidebar-collapsed .notification-badge {
-  position: absolute;
-  top: 5px;
-  right: 5px;
+  
+  .sidebar-collapsed {
+    width: 70px;
+  }
 }
 </style>

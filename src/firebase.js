@@ -8,12 +8,12 @@ import { getStorage } from "firebase/storage"
 
 // Your Firebase project configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyB6dK5gpEyDx9TgNWg4yFh9EGq3EaJieDQ",
-  authDomain: "system-cd851.firebaseapp.com",
-  projectId: "system-cd851",
-  storageBucket: "system-cd851.firebasestorage.app",
-  messagingSenderId: "289046423387",
-  appId: "1:289046423387:web:522d89817d8835f7049c7e"
+  apiKey: "AIzaSyC8Ly0TLO4y1d1QgSABOPkr1HEqSZKC2B4",
+  authDomain: "primeno-696eb.firebaseapp.com",
+  projectId: "primeno-696eb",
+  storageBucket: "primeno-696eb.appspot.com",
+  messagingSenderId: "446781126402",
+  appId: "1:446781126402:web:e24546afe884fe7ab5b41b"
 }
 
 // Initialize Firebase App

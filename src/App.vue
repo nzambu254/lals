@@ -15,7 +15,7 @@
       <!-- Top Navigation Bar -->
       <nav class="top-nav">
         <div class="nav-content">
-          <h1 class="system-title">Longitude & Latitude Learning System</h1>
+          <h1 class="system-title">Prime numbers Learning System</h1>
           <div class="nav-right">
             <span class="user-email">{{ currentUserEmail }}</span>
             <span v-if="isAdmin" class="admin-badge">Admin</span>

@@ -447,7 +447,7 @@ const resetPassword = async () => {
   }
 
   // Special handling for admin account
-  if (formData.value.email === 'alvn4407@gmail.com') { // Assuming this is a hardcoded admin email
+  if (formData.value.email === 'kapkechui72@gmail.com') { // Assuming this is a hardcoded admin email
     error.value = 'Please contact the administrator for password reset of this specific account.';
     return;
   }

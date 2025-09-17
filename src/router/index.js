@@ -7,24 +7,14 @@ import { db } from '@/firebase'
 // Admin Components
 import AdminDashboard from '@/views/admin/AdminDashboard.vue'
 import UserManagement from '@/views/admin/UserManagement.vue'
-import ContentCreation from '@/views/admin/ContentCreation.vue'
-import SimulationModules from '@/views/admin/SimulationModules.vue'
 import AdminQuizReports from '@/views/admin/AdminQuizReports.vue'
 import AdminNotifications from '@/views/admin/AdminNotifications.vue'
 
 // Student Components
 import StudentDashboard from '@/views/student/StudentDashboard.vue'
-import SimulationTasks from '@/views/student/SimulationTasks.vue'
-import VisualizationModule from '@/views/student/VisualizationModule.vue'
-import DistanceCalculation from '@/views/student/DistanceCalculation.vue'
 import InteractiveQuizzes from '@/views/student/InteractiveQuizzes.vue'
 import StudentNotifications from '@/views/student/StudentNotifications.vue'
-
-// Simulation Components
-import IdentifyCoordinatesSimulation from '@/views/Simulations/IdentifyCoordinatesSimulation.vue'
-import GreatCircleMeridianSimulation from '@/views/Simulations/GreatCircleMeridianSimulation.vue'
-import GreatCircleHaversineSimulation from '@/views/Simulations/GreatCircleHaversineSimulation.vue'
-import SmallCircleParallelSimulation from '@/views/Simulations/SmallCircleParallelSimulation.vue'
+import Flashcards from '@/views/student/Flashcards.vue'
 
 // Shared Components
 import Login from '@/views/auth/Login.vue'
@@ -86,18 +76,6 @@ const routes = [
     meta: { requiresAuth: true, role: 'admin' }
   },
   {
-    path: '/admin/content',
-    name: 'ContentCreation',
-    component: ContentCreation,
-    meta: { requiresAuth: true, role: 'admin' }
-  },
-  {
-    path: '/admin/simulations',
-    name: 'SimulationModules',
-    component: SimulationModules,
-    meta: { requiresAuth: true, role: 'admin' }
-  },
-  {
     path: '/admin/quiz-reports',
     name: 'AdminQuizReports',
     component: AdminQuizReports,
@@ -123,59 +101,21 @@ const routes = [
     meta: { requiresAuth: true, role: 'student' }
   },
   {
-    path: '/student/simulations',
-    name: 'SimulationTasks',
-    component: SimulationTasks,
-    meta: { requiresAuth: true, role: 'student' }
-  },
-  {
-    path: '/student/visualization',
-    name: 'VisualizationModule',
-    component: VisualizationModule,
-    meta: { requiresAuth: true, role: 'student' }
-  },
-  {
-    path: '/student/distance-calculation',
-    name: 'DistanceCalculation',
-    component: DistanceCalculation,
-    meta: { requiresAuth: true, role: 'student' }
-  },
-  {
     path: '/student/interactive-quizzes',
     name: 'InteractiveQuizzes',
     component: InteractiveQuizzes,
     meta: { requiresAuth: true, role: 'student' }
   },
   {
+    path: '/student/flashcards',
+    name: 'Flashcards',
+    component: Flashcards,
+    meta: { requiresAuth: true, role: 'student' }
+  },
+  {
     path: '/student/notifications',
     name: 'StudentNotifications',
     component: StudentNotifications,
-    meta: { requiresAuth: true, role: 'student' }
-  },
-
-  // Simulation Task Routes (under a common base for students)
-  {
-    path: '/simulation/101',
-    name: 'IdentifyCoordinatesSimulation',
-    component: IdentifyCoordinatesSimulation,
-    meta: { requiresAuth: true, role: 'student' }
-  },
-  {
-    path: '/simulation/201',
-    name: 'GreatCircleMeridianSimulation',
-    component: GreatCircleMeridianSimulation,
-    meta: { requiresAuth: true, role: 'student' }
-  },
-  {
-    path: '/simulation/203',
-    name: 'GreatCircleHaversineSimulation',
-    component: GreatCircleHaversineSimulation,
-    meta: { requiresAuth: true, role: 'student' }
-  },
-  {
-    path: '/simulation/301',
-    name: 'SmallCircleParallelSimulation',
-    component: SmallCircleParallelSimulation,
     meta: { requiresAuth: true, role: 'student' }
   },
 
@@ -195,29 +135,24 @@ const router = createRouter({
 // Enhanced route guard with proper Firebase auth checking
 router.beforeEach(async (to, from, next) => {
   try {
-    // Wait for Firebase auth to initialize
     const currentUser = await getCurrentUser();
 
     if (to.meta.requiresAuth) {
-      // Route requires authentication
       if (!currentUser) {
         console.log('No authenticated user, redirecting to login');
         return next('/login');
       }
 
-      // Check role-based access
       if (to.meta.role) {
         const userRole = await getUserRole(currentUser.uid);
 
         if (to.meta.role !== userRole) {
           console.log(`Role mismatch. Required: ${to.meta.role}, User: ${userRole}`);
-          // Redirect to appropriate dashboard based on user's actual role
           const redirectPath = userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard';
           return next(redirectPath);
         }
       }
     } else if (to.meta.requiresGuest) {
-      // Route requires no authentication (login, landing page)
       if (currentUser) {
         console.log('User already authenticated, redirecting to dashboard');
         const userRole = await getUserRole(currentUser.uid);
@@ -229,7 +164,6 @@ router.beforeEach(async (to, from, next) => {
     next();
   } catch (error) {
     console.error('Router guard error:', error);
-    // If there's an error with auth, redirect to login for protected routes
     if (to.meta.requiresAuth) {
       next('/login');
     } else {
