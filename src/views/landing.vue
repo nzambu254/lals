@@ -5,7 +5,7 @@
         <h1>Welcome to PrimeLearn</h1>
         <p>Enhance your learning with interactive flashcards, quizzes, and progress tracking.</p>
         <div class="cta-buttons">
-          <RouterLink to="/register" class="cta-button primary">Get Started</RouterLink>
+          <RouterLink to="/login" class="cta-button primary">Get Started</RouterLink>
           <RouterLink to="/login" class="cta-button secondary">Login</RouterLink>
         </div>
       </div>
